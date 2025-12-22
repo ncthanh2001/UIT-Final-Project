@@ -1,0 +1,153 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-21 10:33:36.469520",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_basic",
+  "plan_name",
+  "company",
+  "forecast_history",
+  "plan_from_period",
+  "plan_to_period",
+  "column_break_1",
+  "source_type",
+  "time_granularity",
+  "status",
+  "section_capacity",
+  "capacity_status",
+  "section_meta",
+  "remarks",
+  "items"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_basic",
+   "fieldtype": "Section Break",
+   "label": "Production Plan Header"
+  },
+  {
+   "description": "T\u00ean k\u1ebf ho\u1ea1ch s\u1ea3n xu\u1ea5t (v\u00ed d\u1ee5: K\u1ebf ho\u1ea1ch Q1\u2013Q2/2025)",
+   "fieldname": "plan_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Plan Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "description": "L\u1ea7n ch\u1ea1y d\u1ef1 \u0111o\u00e1n \u0111\u01b0\u1ee3c d\u00f9ng \u0111\u1ec3 t\u1ea1o k\u1ebf ho\u1ea1ch",
+   "fieldname": "forecast_history",
+   "fieldtype": "Link",
+   "label": "Forecast History",
+   "options": "APS Forecast History",
+   "reqd": 1
+  },
+  {
+   "description": "K\u1ef3 b\u1eaft \u0111\u1ea7u c\u1ee7a k\u1ebf ho\u1ea1ch (v\u00ed d\u1ee5: \u0111\u1ea7u Q1)",
+   "fieldname": "plan_from_period",
+   "fieldtype": "Date",
+   "label": "Plan From Period",
+   "reqd": 1
+  },
+  {
+   "description": "K\u1ef3 k\u1ebft th\u00fac c\u1ee7a k\u1ebf ho\u1ea1ch (v\u00ed d\u1ee5: cu\u1ed1i Q2)",
+   "fieldname": "plan_to_period",
+   "fieldtype": "Date",
+   "label": "Plan To Period",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Forecast",
+   "fieldname": "source_type",
+   "fieldtype": "Select",
+   "label": "Plan Source",
+   "options": "Forecast\nSales Order\nManual",
+   "reqd": 1
+  },
+  {
+   "default": "Quarterly",
+   "description": "\u0110\u1ed9 ph\u00e2n gi\u1ea3i th\u1eddi gian c\u1ee7a k\u1ebf ho\u1ea1ch",
+   "fieldname": "time_granularity",
+   "fieldtype": "Select",
+   "label": "Time Granularity",
+   "options": "Monthly\nQuarterly"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nPlanned\nReleased\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_capacity",
+   "fieldtype": "Section Break",
+   "label": "Capacity Overview"
+  },
+  {
+   "default": "Unknown",
+   "description": "T\u00ecnh tr\u1ea1ng n\u0103ng l\u1ef1c t\u1ed5ng th\u1ec3 so v\u1edbi k\u1ebf ho\u1ea1ch",
+   "fieldname": "capacity_status",
+   "fieldtype": "Select",
+   "label": "Capacity Status",
+   "options": "Unknown\nOK\nOverloaded"
+  },
+  {
+   "fieldname": "section_meta",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
+  },
+  {
+   "description": "Ghi ch\u00fa ho\u1eb7c gi\u1ea3i th\u00edch th\u00eam cho k\u1ebf ho\u1ea1ch",
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "APS Production Plan Item"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-12-21 10:36:43.934952",
+ "modified_by": "Administrator",
+ "module": "UIT APS",
+ "name": "APS Production Plan",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

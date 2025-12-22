@@ -4,9 +4,18 @@ app_publisher = "thanhnc"
 app_description = "advanced planning and scheduling"
 app_email = "chithanh03062001@gmail.com"
 app_license = "mit"
-
+app_home = "/app/uit_aps"
 # Apps
 # ------------------
+add_to_apps_screen = [
+    {
+        "name": "uit_aps",
+        "logo": "/assets/uit_aps/images/logo.png",
+        "title": "UIT APS",
+        "route": "/app/uit_aps",
+        "has_permission": "erpnext.check_app_permission",
+    }
+]
 
 # required_apps = []
 
@@ -24,10 +33,57 @@ app_license = "mit"
 # Includes in <head>
 # ------------------
 
+# doc_events = {
+#     "Stock Ledger Entry": {
+#         "on_submit": "uit_aps.hooks_handlers.on_stock_ledger_entry_submit_safe"
+#     },
+#     "Purchase Order": {
+#         "on_submit": "uit_aps.hooks_handlers.on_purchase_order_submit_safe"
+#     },
+#     "Purchase Receipt": {
+#         "on_submit": "uit_aps.hooks_handlers.on_purchase_receipt_submit_safe"
+#     },
+#     "Item": {
+#         "after_insert": "uit_aps.hooks_handlers.on_item_after_insert_safe",
+#         "on_update": "ai_inventory.hooks_handlers.on_item_on_update_safe",
+#     },
+#     "Warehouse": {
+#         "after_insert": "uit_aps.hooks_handlers.on_warehouse_after_insert_safe"
+#     },
+#     "AI Inventory Forecast": {
+#         "validate": "uit_aps.hooks_handlers.validate_ai_inventory_forecast_safe",
+#         "on_save": "uit_aps.hooks_handlers.on_ai_inventory_forecast_save_safe",
+#     },
+#     "Bin": {"on_update": "uit_aps.hooks_handlers.on_bin_update_safe"},
+#     "Stock Entry": {"on_submit": "uit_aps.hooks_handlers.on_stock_entry_submit_safe"},
+#     "Sales Order": {"on_submit": "uit_aps.forecasting.triggers.on_sales_order_submit"},
+#     "Sales Invoice": {
+#         "on_submit": "uit_aps.forecasting.triggers.on_sales_invoice_submit",
+#         "on_cancel": "uit_aps.forecasting.triggers.on_sales_invoice_cancel",
+#     },
+#     # Financial Forecasting Integration
+#     "AI Financial Forecast": {
+#         "validate": "uit_aps.ai_accounts_forecast.hooks.validate_financial_forecast",
+#         "on_save": "uit_aps.ai_accounts_forecast.hooks.on_financial_forecast_save",
+#         "after_insert": "uit_aps.ai_accounts_forecast.hooks.after_financial_forecast_insert",
+#     },
+#     "Journal Entry": {
+#         "on_submit": "uit_aps.ai_accounts_forecast.hooks.on_journal_entry_submit"
+#     },
+#     "Payment Entry": {
+#         "on_submit": "uit_aps.ai_accounts_forecast.hooks.on_payment_entry_submit"
+#     },
+#     "GL Entry": {"on_submit": "uit_aps.ai_accounts_forecast.hooks.on_gl_entry_submit"},
+#     "Account": {
+#         "after_insert": "uit_aps.ai_accounts_forecast.hooks.on_account_created"
+#     },
+# }
 # include js, css files in header of desk.html
 # app_include_css = "/assets/uit_aps/css/uit_aps.css"
-# app_include_js = "/assets/uit_aps/js/uit_aps.js"
-
+# app_include_js = [
+#     "/assets/uit_aps/js/tools_override.js",
+#     "/assets/uit_aps/js/grid_override.js",
+# ]
 # include js, css files in header of web template
 # web_include_css = "/assets/uit_aps/css/uit_aps.css"
 # web_include_js = "/assets/uit_aps/js/uit_aps.js"
@@ -241,4 +297,3 @@ app_license = "mit"
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-

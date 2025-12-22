@@ -1,0 +1,61 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "creation": "2025-12-21 10:34:04.583567",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "fields": [
+    {
+      "fieldname": "item",
+      "fieldtype": "Link",
+      "label": "Item",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "plan_period",
+      "fieldtype": "Date",
+      "label": "Plan Period",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Kỳ kế hoạch tương ứng (ví dụ: đầu quý)"
+    },
+    {
+      "fieldname": "planned_qty",
+      "fieldtype": "Float",
+      "label": "Planned Quantity",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Số lượng sản xuất dự kiến cho sản phẩm trong kỳ này"
+    },
+    {
+      "fieldname": "forecast_result",
+      "fieldtype": "Link",
+      "label": "Forecast Result",
+      "options": "APS Forecast Result",
+      "description": "Tham chiếu tới kết quả dự đoán tương ứng"
+    },
+    {
+      "fieldname": "safety_stock",
+      "fieldtype": "Float",
+      "label": "Safety Stock",
+      "description": "Tồn kho an toàn được cộng thêm (nếu có)"
+    }
+  ],
+  "grid_page_length": 50,
+  "index_web_pages_for_search": 1,
+  "istable": 1,
+  "links": [],
+  "modified": "2025-12-21 10:34:04.583567",
+  "modified_by": "Administrator",
+  "module": "UIT APS",
+  "name": "APS Production Plan Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "row_format": "Dynamic",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

@@ -1,0 +1,120 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "creation": "2025-12-21 12:05:19.049629",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "section_basic",
+    "mrp_run",
+    "material_item",
+    "purchase_qty",
+    "required_date",
+    "column_break_1",
+    "supplier",
+    "unit_price",
+    "lead_time",
+    "suggestion_status",
+    "section_meta",
+    "notes"
+  ],
+  "fields": [
+    {
+      "fieldname": "section_basic",
+      "fieldtype": "Section Break",
+      "label": "Purchase Suggestion"
+    },
+    {
+      "fieldname": "mrp_run",
+      "fieldtype": "Link",
+      "label": "MRP Run",
+      "options": "APS MRP Run",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "material_item",
+      "fieldtype": "Link",
+      "label": "Material",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "purchase_qty",
+      "fieldtype": "Float",
+      "label": "Purchase Quantity",
+      "reqd": 1
+    },
+    {
+      "fieldname": "required_date",
+      "fieldtype": "Date",
+      "label": "Required Date",
+      "description": "Ngày cần có vật tư để đảm bảo tiến độ sản xuất"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "label": "Suggested Supplier",
+      "options": "Supplier"
+    },
+    {
+      "fieldname": "unit_price",
+      "fieldtype": "Currency",
+      "label": "Unit Price"
+    },
+    {
+      "fieldname": "lead_time",
+      "fieldtype": "Int",
+      "label": "Lead Time (Days)"
+    },
+    {
+      "fieldname": "suggestion_status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nApproved\nOrdered\nRejected",
+      "default": "Draft",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "section_meta",
+      "fieldtype": "Section Break",
+      "label": "Additional Information"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes"
+    }
+  ],
+  "grid_page_length": 50,
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2025-12-21 12:05:19.049629",
+  "modified_by": "Administrator",
+  "module": "UIT APS",
+  "name": "APS Purchase Suggestion",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

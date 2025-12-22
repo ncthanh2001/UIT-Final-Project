@@ -1,0 +1,75 @@
+{
+  "actions": [],
+  "creation": "2025-12-22 10:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "item",
+    "item_name",
+    "forecast_qty",
+    "column_break_1",
+    "confidence_score",
+    "movement_type",
+    "reorder_alert"
+  ],
+  "fields": [
+    {
+      "fieldname": "item",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Item",
+      "options": "Item",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "item.item_name",
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Item Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "forecast_qty",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Forecast Qty",
+      "precision": 2
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "confidence_score",
+      "fieldtype": "Percent",
+      "in_list_view": 1,
+      "label": "Confidence"
+    },
+    {
+      "fieldname": "movement_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Movement",
+      "options": "Fast Moving\nSlow Moving\nNon Moving"
+    },
+    {
+      "default": "0",
+      "fieldname": "reorder_alert",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Reorder Alert"
+    }
+  ],
+  "istable": 1,
+  "modified": "2025-12-22 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "UIT APS",
+  "name": "APS Forecast History Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
