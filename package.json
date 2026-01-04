@@ -1,0 +1,12 @@
+{
+  "name": "uit_aps",
+  "version": "1.0.0",
+  "description": "advanced planning and scheduling",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

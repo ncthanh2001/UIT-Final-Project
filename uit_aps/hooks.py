@@ -79,13 +79,14 @@ add_to_apps_screen = [
 #     },
 # }
 # include js, css files in header of desk.html
+# app_include_css = "uit.bundle.css"
 # app_include_css = "/assets/uit_aps/css/uit_aps.css"
 # app_include_js = [
 #     "/assets/uit_aps/js/tools_override.js",
 #     "/assets/uit_aps/js/grid_override.js",
 # ]
-# include js, css files in header of web template
-# web_include_css = "/assets/uit_aps/css/uit_aps.css"
+# include js, css files in header of web template (cho login page)
+# web_include_css = "/assets/uit_aps/css/uit_index.css"
 # web_include_js = "/assets/uit_aps/js/uit_aps.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -297,3 +298,5 @@ add_to_apps_screen = [
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
+
+website_route_rules = [{'from_route': '/frontend/<path:app_path>', 'to_route': 'frontend'},]
