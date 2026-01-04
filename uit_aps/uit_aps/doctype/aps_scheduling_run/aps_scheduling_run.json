@@ -4,18 +4,35 @@
   "creation": "2025-12-21 14:23:41.508810",
   "doctype": "DocType",
   "engine": "InnoDB",
-  "description": "Lưu lịch sử và tham số của mỗi lần chạy lập lịch sản xuất (APS Scheduling).",
+  "description": "Luu lich su va tham so cua moi lan chay lap lich san xuat (APS Scheduling).",
   "field_order": [
     "section_basic",
     "production_plan",
     "run_status",
     "column_break_1",
     "scheduling_strategy",
+    "scheduling_tier",
     "run_date",
     "executed_by",
+    "section_solver_config",
+    "time_limit_seconds",
+    "min_gap_between_ops",
+    "column_break_solver",
+    "makespan_weight",
+    "tardiness_weight",
     "section_result",
     "total_job_cards",
     "total_late_jobs",
+    "jobs_on_time",
+    "column_break_result",
+    "solver_status",
+    "solve_time_seconds",
+    "gap_percentage",
+    "section_metrics",
+    "makespan_minutes",
+    "total_tardiness_minutes",
+    "column_break_metrics",
+    "machine_utilization",
     "section_meta",
     "notes"
   ],
@@ -31,7 +48,7 @@
       "label": "Production Plan",
       "options": "APS Production Plan",
       "reqd": 1,
-      "description": "Kế hoạch sản xuất được dùng để chạy APS Scheduling"
+      "description": "Ke hoach san xuat duoc dung de chay APS Scheduling"
     },
     {
       "fieldname": "run_status",
@@ -52,7 +69,15 @@
       "label": "Scheduling Strategy",
       "options": "Forward Scheduling\nBackward Scheduling\nPriority Based\nEDD (Earliest Due Date)",
       "reqd": 1,
-      "description": "Chiến lược lập lịch được sử dụng"
+      "description": "Chien luoc lap lich duoc su dung"
+    },
+    {
+      "fieldname": "scheduling_tier",
+      "fieldtype": "Select",
+      "label": "Scheduling Tier",
+      "options": "Tier 1 - OR-Tools\nTier 2 - RL Agent\nTier 3 - GNN",
+      "default": "Tier 1 - OR-Tools",
+      "description": "Tier of hybrid APS system to use"
     },
     {
       "fieldname": "run_date",
@@ -68,6 +93,44 @@
       "default": "frappe.session.user"
     },
     {
+      "fieldname": "section_solver_config",
+      "fieldtype": "Section Break",
+      "label": "Solver Configuration",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "time_limit_seconds",
+      "fieldtype": "Int",
+      "label": "Time Limit (seconds)",
+      "default": "300",
+      "description": "Maximum solver time in seconds"
+    },
+    {
+      "fieldname": "min_gap_between_ops",
+      "fieldtype": "Int",
+      "label": "Min Gap Between Ops (mins)",
+      "default": "10",
+      "description": "Minimum gap between operations in minutes"
+    },
+    {
+      "fieldname": "column_break_solver",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "makespan_weight",
+      "fieldtype": "Float",
+      "label": "Makespan Weight",
+      "default": "1.0",
+      "description": "Weight for makespan objective"
+    },
+    {
+      "fieldname": "tardiness_weight",
+      "fieldtype": "Float",
+      "label": "Tardiness Weight",
+      "default": "10.0",
+      "description": "Weight for tardiness penalty"
+    },
+    {
       "fieldname": "section_result",
       "fieldtype": "Section Break",
       "label": "Scheduling Summary"
@@ -76,13 +139,79 @@
       "fieldname": "total_job_cards",
       "fieldtype": "Int",
       "label": "Total Job Cards Scheduled",
-      "description": "Tổng số Job Card được lập lịch"
+      "read_only": 1,
+      "description": "Tong so Job Card duoc lap lich"
     },
     {
       "fieldname": "total_late_jobs",
       "fieldtype": "Int",
       "label": "Late Job Cards",
-      "description": "Số Job Card có nguy cơ trễ hạn"
+      "read_only": 1,
+      "description": "So Job Card co nguy co tre han"
+    },
+    {
+      "fieldname": "jobs_on_time",
+      "fieldtype": "Int",
+      "label": "Jobs On Time",
+      "read_only": 1,
+      "description": "Number of jobs scheduled on time"
+    },
+    {
+      "fieldname": "column_break_result",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "solver_status",
+      "fieldtype": "Select",
+      "label": "Solver Status",
+      "options": "\nNot Started\nRunning\nOptimal\nFeasible\nInfeasible\nTimeout\nError",
+      "read_only": 1,
+      "description": "OR-Tools solver status"
+    },
+    {
+      "fieldname": "solve_time_seconds",
+      "fieldtype": "Float",
+      "label": "Solve Time (seconds)",
+      "read_only": 1,
+      "description": "Time taken to solve"
+    },
+    {
+      "fieldname": "gap_percentage",
+      "fieldtype": "Float",
+      "label": "Optimality Gap (%)",
+      "read_only": 1,
+      "description": "Gap from optimal solution"
+    },
+    {
+      "fieldname": "section_metrics",
+      "fieldtype": "Section Break",
+      "label": "Performance Metrics",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "makespan_minutes",
+      "fieldtype": "Int",
+      "label": "Makespan (minutes)",
+      "read_only": 1,
+      "description": "Total makespan of schedule"
+    },
+    {
+      "fieldname": "total_tardiness_minutes",
+      "fieldtype": "Int",
+      "label": "Total Tardiness (minutes)",
+      "read_only": 1,
+      "description": "Sum of all job tardiness"
+    },
+    {
+      "fieldname": "column_break_metrics",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "machine_utilization",
+      "fieldtype": "Float",
+      "label": "Avg Machine Utilization (%)",
+      "read_only": 1,
+      "description": "Average machine utilization percentage"
     },
     {
       "fieldname": "section_meta",
