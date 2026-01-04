@@ -5,3 +5,5 @@
 tags
 node_modules
 __pycache__
+# Ignore nested repo
+vue-it-together/
