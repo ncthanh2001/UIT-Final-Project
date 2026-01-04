@@ -1,61 +1,95 @@
 {
-  "actions": [],
-  "allow_rename": 1,
-  "creation": "2025-12-21 10:34:04.583567",
-  "doctype": "DocType",
-  "editable_grid": 1,
-  "engine": "InnoDB",
-  "fields": [
-    {
-      "fieldname": "item",
-      "fieldtype": "Link",
-      "label": "Item",
-      "options": "Item",
-      "reqd": 1,
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "plan_period",
-      "fieldtype": "Date",
-      "label": "Plan Period",
-      "reqd": 1,
-      "in_list_view": 1,
-      "description": "Kỳ kế hoạch tương ứng (ví dụ: đầu quý)"
-    },
-    {
-      "fieldname": "planned_qty",
-      "fieldtype": "Float",
-      "label": "Planned Quantity",
-      "reqd": 1,
-      "in_list_view": 1,
-      "description": "Số lượng sản xuất dự kiến cho sản phẩm trong kỳ này"
-    },
-    {
-      "fieldname": "forecast_result",
-      "fieldtype": "Link",
-      "label": "Forecast Result",
-      "options": "APS Forecast Result",
-      "description": "Tham chiếu tới kết quả dự đoán tương ứng"
-    },
-    {
-      "fieldname": "safety_stock",
-      "fieldtype": "Float",
-      "label": "Safety Stock",
-      "description": "Tồn kho an toàn được cộng thêm (nếu có)"
-    }
-  ],
-  "grid_page_length": 50,
-  "index_web_pages_for_search": 1,
-  "istable": 1,
-  "links": [],
-  "modified": "2025-12-21 10:34:04.583567",
-  "modified_by": "Administrator",
-  "module": "UIT APS",
-  "name": "APS Production Plan Item",
-  "owner": "Administrator",
-  "permissions": [],
-  "row_format": "Dynamic",
-  "sort_field": "modified",
-  "sort_order": "DESC",
-  "states": []
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-21 10:34:04.583567",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "plan_period",
+  "planned_qty",
+  "forecast_result",
+  "safety_stock",
+  "forecast_quantiy",
+  "current_stock",
+  "planned_start_date",
+  "lead_time_days"
+ ],
+ "fields": [
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "description": "K\u1ef3 k\u1ebf ho\u1ea1ch t\u01b0\u01a1ng \u1ee9ng (v\u00ed d\u1ee5: \u0111\u1ea7u qu\u00fd)",
+   "fieldname": "plan_period",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Plan Period",
+   "reqd": 1
+  },
+  {
+   "description": "S\u1ed1 l\u01b0\u1ee3ng s\u1ea3n xu\u1ea5t d\u1ef1 ki\u1ebfn cho s\u1ea3n ph\u1ea9m trong k\u1ef3 n\u00e0y",
+   "fieldname": "planned_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Planned Quantity",
+   "reqd": 1
+  },
+  {
+   "description": "Tham chi\u1ebfu t\u1edbi k\u1ebft qu\u1ea3 d\u1ef1 \u0111o\u00e1n t\u01b0\u01a1ng \u1ee9ng",
+   "fieldname": "forecast_result",
+   "fieldtype": "Link",
+   "label": "Forecast Result",
+   "options": "APS Forecast Result"
+  },
+  {
+   "description": "T\u1ed3n kho an to\u00e0n \u0111\u01b0\u1ee3c c\u1ed9ng th\u00eam (n\u1ebfu c\u00f3)",
+   "fieldname": "safety_stock",
+   "fieldtype": "Float",
+   "label": "Safety Stock"
+  },
+  {
+   "description": "SL d\u1ef1 b\u00e1o g\u1ed1c",
+   "fieldname": "forecast_quantiy",
+   "fieldtype": "Float",
+   "label": "Forecast Quantiy"
+  },
+  {
+   "description": "T\u1ed3n kho hi\u1ec7n t\u1ea1i",
+   "fieldname": "current_stock",
+   "fieldtype": "Float",
+   "label": "Current Stock"
+  },
+  {
+   "description": "Ng\u00e0y b\u1eaft \u0111\u1ea7u s\u1ea3n xu\u1ea5t",
+   "fieldname": "planned_start_date",
+   "fieldtype": "Date",
+   "label": "Planned Start Date"
+  },
+  {
+   "fieldname": "lead_time_days",
+   "fieldtype": "Float",
+   "label": "Lead Time Days"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-12-28 21:32:41.084774",
+ "modified_by": "Administrator",
+ "module": "UIT APS",
+ "name": "APS Production Plan Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
 }

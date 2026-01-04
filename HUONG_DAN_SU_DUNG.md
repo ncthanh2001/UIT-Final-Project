@@ -13,6 +13,8 @@ source env/bin/activate
 
 # Cai dat cac package
 pip install numpy pandas scikit-learn statsmodels prophet
+pip install openai
+
 ```
 
 ### 1.2. Cap nhat DocTypes
@@ -24,6 +26,7 @@ Ban can apply cac JSON files moi cho DocTypes:
 3. **APS Forecast History Item**: Tao child doctype tu file `APS_FORECAST_HISTORY_ITEM_CHILD.json`
 
 Cach apply:
+
 ```bash
 # Copy cac file JSON vao thu muc doctype tuong ung
 # Sau do chay migrate
@@ -35,18 +38,21 @@ bench --site [site-name] migrate
 ## 2. CAC MODEL
 
 ### 2.1. ARIMA Model
+
 - **File**: `apps/uit_aps/uit_aps/ml/arima_model.py`
 - **Phu hop cho**: Time series co tinh stationary, seasonal patterns
 - **Uu diem**: Tot cho du lieu co trend va seasonality
 - **Nhuoc diem**: Can nhieu du lieu (>30 data points), tinh toan cham
 
 ### 2.2. Linear Regression Model
+
 - **File**: `apps/uit_aps/uit_aps/ml/linear_regression_model.py`
 - **Phu hop cho**: Trend tuyen tinh, du lieu don gian
 - **Uu diem**: Nhanh, don gian, de hieu
 - **Nhuoc diem**: Khong xu ly tot seasonality
 
 ### 2.3. Prophet Model
+
 - **File**: `apps/uit_aps/uit_aps/ml/prophet.py`
 - **Phu hop cho**: Du lieu co seasonality phuc tap, missing data
 - **Uu diem**: Tu dong phat hien seasonality, xu ly outliers tot
@@ -142,6 +148,7 @@ curl -X POST "http://your-site/api/method/uit_aps.uit_api.run_model.compare_mode
 Vao ERPNext > UIT APS > APS Forecast History
 
 Tai day ban co the xem:
+
 - Cac lan chay forecast
 - Model duoc su dung
 - Thoi gian chay
@@ -155,6 +162,7 @@ Vao ERPNext > UIT APS > APS Forecast Result
 Hoac tu APS Forecast History, click vao "View Results"
 
 Moi result se hien thi:
+
 - Item code
 - Forecast quantity
 - Confidence score
@@ -186,22 +194,26 @@ for result in results:
 Moi forecast result se co cac fields sau:
 
 ### Core Forecast
+
 - `forecast_qty`: So luong du doan
 - `confidence_score`: Do tin cay (%)
 - `lower_bound`: Bien duoi cua khoang tin cay
 - `upper_bound`: Bien tren cua khoang tin cay
 
 ### Model Information
+
 - `model_used`: Model da su dung (ARIMA/Linear Regression/Prophet)
 - `model_confidence`: Chi so tin cay cua model
 - `training_data_points`: So data points da train
 
 ### Movement & Trend
+
 - `movement_type`: Fast Moving / Slow Moving / Non Moving
 - `daily_avg_consumption`: Tieu thu trung binh hang ngay
 - `trend_type`: Upward / Downward / Stable
 
 ### Inventory Recommendations
+
 - `reorder_level`: Muc ton kho can dat hang lai
 - `suggested_qty`: So luong de xuat dat hang
 - `safety_stock`: Ton kho an toan
@@ -209,21 +221,25 @@ Moi forecast result se co cac fields sau:
 - `reorder_alert`: Canh bao can dat hang (Yes/No)
 
 ### Model-Specific (ARIMA)
+
 - `arima_p`: AR order
 - `arima_d`: Differencing order
 - `arima_q`: MA order
 - `arima_aic`: AIC score
 
 ### Model-Specific (Linear Regression)
+
 - `lr_r2_score`: R² score (%)
 - `lr_slope`: Do doc cua trend
 
 ### Model-Specific (Prophet)
+
 - `prophet_seasonality_detected`: Co phat hien seasonality khong
 - `prophet_seasonality_type`: Loai seasonality (Weekly/Monthly/Yearly)
 - `prophet_changepoint_count`: So diem thay doi trend
 
 ### Explanations
+
 - `forecast_explanation`: Giai thich chi tiet
 - `recommendations`: Khuyen nghi hanh dong
 - `notes`: Ghi chu
@@ -237,6 +253,7 @@ Moi forecast result se co cac fields sau:
 Cac model tu dong lay du lieu tu Sales Order voi `docstatus=1` (da submit).
 
 Du lieu su dung:
+
 - `delivery_date`: Ngay giao hang (de xac dinh demand pattern)
 - `qty`: So luong (demand quantity)
 - `item_code`: San pham
@@ -245,12 +262,14 @@ Du lieu su dung:
 ### 6.2. Lay thong tin ton kho
 
 System tu dong lay:
+
 - Current stock tu Bin table
 - Lead time tu Item Supplier
 
 ### 6.3. Auto-update recommendations
 
 Moi forecast se tu dong tinh:
+
 - Reorder level = (Daily avg × Lead time) × Safety factor
 - Safety stock = Daily avg × Lead time × 0.3
 - Suggested qty = Daily avg × (Forecast period + Lead time)
@@ -301,7 +320,7 @@ Moi forecast se tu dong tinh:
 ### 8.3. Forecast accuracy thap
 
 - **Nguyen nhan**: Du lieu khong tot, seasonality phuc tap
-- **Giai phap**: 
+- **Giai phap**:
   - Tang training period
   - Thu model khac
   - Kiem tra data quality
@@ -352,7 +371,7 @@ for item in reorder_items:
 # Chay moi thu 2 hang tuan
 def weekly_forecast():
     companies = frappe.get_all("Company", pluck="name")
-    
+
     for company in companies:
         try:
             # Chay Prophet cho all items
@@ -362,7 +381,7 @@ def weekly_forecast():
                 forecast_horizon_days=30,
                 training_period_days=180
             )
-            
+
             # Send notification neu co reorder alerts
             alerts = frappe.db.count(
                 "APS Forecast Result",
@@ -371,7 +390,7 @@ def weekly_forecast():
                     "reorder_alert": 1
                 }
             )
-            
+
             if alerts > 0:
                 # Send email notification
                 frappe.sendmail(
@@ -388,6 +407,7 @@ def weekly_forecast():
 ## 10. KET LUAN
 
 He thong forecast nay giup ban:
+
 - ✅ Du doan demand tu Sales Order history
 - ✅ Tu dong phat hien trend va seasonality
 - ✅ Recommendation ve reorder level va quantity
@@ -395,4 +415,3 @@ He thong forecast nay giup ban:
 - ✅ Luu tru lich su forecast de phan tich
 
 Chuc ban thanh cong! 🚀
-
