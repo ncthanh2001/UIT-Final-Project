@@ -1,253 +1,252 @@
 {
-  "actions": [],
-  "allow_rename": 1,
-  "creation": "2025-12-21 14:23:41.508810",
-  "doctype": "DocType",
-  "engine": "InnoDB",
-  "description": "Luu lich su va tham so cua moi lan chay lap lich san xuat (APS Scheduling).",
-  "field_order": [
-    "section_basic",
-    "production_plan",
-    "run_status",
-    "column_break_1",
-    "scheduling_strategy",
-    "scheduling_tier",
-    "run_date",
-    "executed_by",
-    "section_solver_config",
-    "time_limit_seconds",
-    "min_gap_between_ops",
-    "column_break_solver",
-    "makespan_weight",
-    "tardiness_weight",
-    "section_result",
-    "total_job_cards",
-    "total_late_jobs",
-    "jobs_on_time",
-    "column_break_result",
-    "solver_status",
-    "solve_time_seconds",
-    "gap_percentage",
-    "section_metrics",
-    "makespan_minutes",
-    "total_tardiness_minutes",
-    "column_break_metrics",
-    "machine_utilization",
-    "section_meta",
-    "notes"
-  ],
-  "fields": [
-    {
-      "fieldname": "section_basic",
-      "fieldtype": "Section Break",
-      "label": "Scheduling Run Information"
-    },
-    {
-      "fieldname": "production_plan",
-      "fieldtype": "Link",
-      "label": "Production Plan",
-      "options": "Production Plan",
-      "reqd": 1,
-      "description": "ERPNext Production Plan - automatically creates Work Orders and Job Cards"
-    },
-    {
-      "fieldname": "run_status",
-      "fieldtype": "Select",
-      "label": "Run Status",
-      "options": "Pending\nRunning\nCompleted\nFailed",
-      "default": "Pending",
-      "reqd": 1,
-      "in_list_view": 1
-    },
-    {
-      "fieldname": "column_break_1",
-      "fieldtype": "Column Break"
-    },
-    {
-      "fieldname": "scheduling_strategy",
-      "fieldtype": "Select",
-      "label": "Scheduling Strategy",
-      "options": "Forward Scheduling\nBackward Scheduling\nPriority Based\nEDD (Earliest Due Date)",
-      "reqd": 1,
-      "description": "Chien luoc lap lich duoc su dung"
-    },
-    {
-      "fieldname": "scheduling_tier",
-      "fieldtype": "Select",
-      "label": "Scheduling Tier",
-      "options": "Tier 1 - OR-Tools\nTier 2 - RL Agent\nTier 3 - GNN",
-      "default": "Tier 1 - OR-Tools",
-      "description": "Tier of hybrid APS system to use"
-    },
-    {
-      "fieldname": "run_date",
-      "fieldtype": "Datetime",
-      "label": "Run Date",
-      "default": "Now"
-    },
-    {
-      "fieldname": "executed_by",
-      "fieldtype": "Link",
-      "label": "Executed By",
-      "options": "User",
-      "default": "frappe.session.user"
-    },
-    {
-      "fieldname": "section_solver_config",
-      "fieldtype": "Section Break",
-      "label": "Solver Configuration",
-      "collapsible": 1
-    },
-    {
-      "fieldname": "time_limit_seconds",
-      "fieldtype": "Int",
-      "label": "Time Limit (seconds)",
-      "default": "300",
-      "description": "Maximum solver time in seconds"
-    },
-    {
-      "fieldname": "min_gap_between_ops",
-      "fieldtype": "Int",
-      "label": "Min Gap Between Ops (mins)",
-      "default": "10",
-      "description": "Minimum gap between operations in minutes"
-    },
-    {
-      "fieldname": "column_break_solver",
-      "fieldtype": "Column Break"
-    },
-    {
-      "fieldname": "makespan_weight",
-      "fieldtype": "Float",
-      "label": "Makespan Weight",
-      "default": "1.0",
-      "description": "Weight for makespan objective"
-    },
-    {
-      "fieldname": "tardiness_weight",
-      "fieldtype": "Float",
-      "label": "Tardiness Weight",
-      "default": "10.0",
-      "description": "Weight for tardiness penalty"
-    },
-    {
-      "fieldname": "section_result",
-      "fieldtype": "Section Break",
-      "label": "Scheduling Summary"
-    },
-    {
-      "fieldname": "total_job_cards",
-      "fieldtype": "Int",
-      "label": "Total Job Cards Scheduled",
-      "read_only": 1,
-      "description": "Tong so Job Card duoc lap lich"
-    },
-    {
-      "fieldname": "total_late_jobs",
-      "fieldtype": "Int",
-      "label": "Late Job Cards",
-      "read_only": 1,
-      "description": "So Job Card co nguy co tre han"
-    },
-    {
-      "fieldname": "jobs_on_time",
-      "fieldtype": "Int",
-      "label": "Jobs On Time",
-      "read_only": 1,
-      "description": "Number of jobs scheduled on time"
-    },
-    {
-      "fieldname": "column_break_result",
-      "fieldtype": "Column Break"
-    },
-    {
-      "fieldname": "solver_status",
-      "fieldtype": "Select",
-      "label": "Solver Status",
-      "options": "\nNot Started\nRunning\nOptimal\nFeasible\nInfeasible\nTimeout\nError",
-      "read_only": 1,
-      "description": "OR-Tools solver status"
-    },
-    {
-      "fieldname": "solve_time_seconds",
-      "fieldtype": "Float",
-      "label": "Solve Time (seconds)",
-      "read_only": 1,
-      "description": "Time taken to solve"
-    },
-    {
-      "fieldname": "gap_percentage",
-      "fieldtype": "Float",
-      "label": "Optimality Gap (%)",
-      "read_only": 1,
-      "description": "Gap from optimal solution"
-    },
-    {
-      "fieldname": "section_metrics",
-      "fieldtype": "Section Break",
-      "label": "Performance Metrics",
-      "collapsible": 1
-    },
-    {
-      "fieldname": "makespan_minutes",
-      "fieldtype": "Int",
-      "label": "Makespan (minutes)",
-      "read_only": 1,
-      "description": "Total makespan of schedule"
-    },
-    {
-      "fieldname": "total_tardiness_minutes",
-      "fieldtype": "Int",
-      "label": "Total Tardiness (minutes)",
-      "read_only": 1,
-      "description": "Sum of all job tardiness"
-    },
-    {
-      "fieldname": "column_break_metrics",
-      "fieldtype": "Column Break"
-    },
-    {
-      "fieldname": "machine_utilization",
-      "fieldtype": "Float",
-      "label": "Avg Machine Utilization (%)",
-      "read_only": 1,
-      "description": "Average machine utilization percentage"
-    },
-    {
-      "fieldname": "section_meta",
-      "fieldtype": "Section Break",
-      "label": "Additional Information"
-    },
-    {
-      "fieldname": "notes",
-      "fieldtype": "Small Text",
-      "label": "Notes"
-    }
-  ],
-  "grid_page_length": 50,
-  "index_web_pages_for_search": 1,
-  "links": [],
-  "modified": "2025-12-21 14:23:41.508810",
-  "modified_by": "Administrator",
-  "module": "UIT APS",
-  "name": "APS Scheduling Run",
-  "owner": "Administrator",
-  "permissions": [
-    {
-      "create": 1,
-      "delete": 1,
-      "email": 1,
-      "export": 1,
-      "print": 1,
-      "read": 1,
-      "report": 1,
-      "role": "System Manager",
-      "share": 1,
-      "write": 1
-    }
-  ],
-  "row_format": "Dynamic",
-  "sort_field": "modified",
-  "sort_order": "DESC",
-  "states": []
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-21 14:23:41.508810",
+ "description": "Luu lich su va tham so cua moi lan chay lap lich san xuat (APS Scheduling).",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_basic",
+  "production_plan",
+  "run_status",
+  "column_break_1",
+  "scheduling_strategy",
+  "scheduling_tier",
+  "run_date",
+  "executed_by",
+  "section_solver_config",
+  "time_limit_seconds",
+  "min_gap_between_ops",
+  "column_break_solver",
+  "makespan_weight",
+  "tardiness_weight",
+  "section_result",
+  "total_job_cards",
+  "total_late_jobs",
+  "jobs_on_time",
+  "column_break_result",
+  "solver_status",
+  "solve_time_seconds",
+  "gap_percentage",
+  "section_metrics",
+  "makespan_minutes",
+  "total_tardiness_minutes",
+  "column_break_metrics",
+  "machine_utilization",
+  "section_meta",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_basic",
+   "fieldtype": "Section Break",
+   "label": "Scheduling Run Information"
+  },
+  {
+   "description": "ERPNext Production Plan - automatically creates Work Orders and Job Cards",
+   "fieldname": "production_plan",
+   "fieldtype": "Link",
+   "label": "Production Plan",
+   "options": "Production Plan",
+   "reqd": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "run_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Run Status",
+   "options": "Pending\nRunning\nCompleted\nFailed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Chien luoc lap lich duoc su dung",
+   "fieldname": "scheduling_strategy",
+   "fieldtype": "Select",
+   "label": "Scheduling Strategy",
+   "options": "Forward Scheduling\nBackward Scheduling\nPriority Based\nEDD (Earliest Due Date)",
+   "reqd": 1
+  },
+  {
+   "default": "Tier 1 - OR-Tools",
+   "description": "Tier of hybrid APS system to use",
+   "fieldname": "scheduling_tier",
+   "fieldtype": "Select",
+   "label": "Scheduling Tier",
+   "options": "Tier 1 - OR-Tools\nTier 2 - RL Agent\nTier 3 - GNN"
+  },
+  {
+   "default": "Now",
+   "fieldname": "run_date",
+   "fieldtype": "Datetime",
+   "label": "Run Date"
+  },
+  {
+   "fieldname": "executed_by",
+   "fieldtype": "Link",
+   "label": "Executed By",
+   "options": "User"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_solver_config",
+   "fieldtype": "Section Break",
+   "label": "Solver Configuration"
+  },
+  {
+   "default": "300",
+   "description": "Maximum solver time in seconds",
+   "fieldname": "time_limit_seconds",
+   "fieldtype": "Int",
+   "label": "Time Limit (seconds)"
+  },
+  {
+   "default": "10",
+   "description": "Minimum gap between operations in minutes",
+   "fieldname": "min_gap_between_ops",
+   "fieldtype": "Int",
+   "label": "Min Gap Between Ops (mins)"
+  },
+  {
+   "fieldname": "column_break_solver",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1.0",
+   "description": "Weight for makespan objective",
+   "fieldname": "makespan_weight",
+   "fieldtype": "Float",
+   "label": "Makespan Weight"
+  },
+  {
+   "default": "10.0",
+   "description": "Weight for tardiness penalty",
+   "fieldname": "tardiness_weight",
+   "fieldtype": "Float",
+   "label": "Tardiness Weight"
+  },
+  {
+   "fieldname": "section_result",
+   "fieldtype": "Section Break",
+   "label": "Scheduling Summary"
+  },
+  {
+   "description": "Tong so Job Card duoc lap lich",
+   "fieldname": "total_job_cards",
+   "fieldtype": "Int",
+   "label": "Total Job Cards Scheduled",
+   "read_only": 1
+  },
+  {
+   "description": "So Job Card co nguy co tre han",
+   "fieldname": "total_late_jobs",
+   "fieldtype": "Int",
+   "label": "Late Job Cards",
+   "read_only": 1
+  },
+  {
+   "description": "Number of jobs scheduled on time",
+   "fieldname": "jobs_on_time",
+   "fieldtype": "Int",
+   "label": "Jobs On Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_result",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "OR-Tools solver status",
+   "fieldname": "solver_status",
+   "fieldtype": "Select",
+   "label": "Solver Status",
+   "options": "\nNot Started\nRunning\nOptimal\nFeasible\nInfeasible\nTimeout\nError",
+   "read_only": 1
+  },
+  {
+   "description": "Time taken to solve",
+   "fieldname": "solve_time_seconds",
+   "fieldtype": "Float",
+   "label": "Solve Time (seconds)",
+   "read_only": 1
+  },
+  {
+   "description": "Gap from optimal solution",
+   "fieldname": "gap_percentage",
+   "fieldtype": "Float",
+   "label": "Optimality Gap (%)",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_metrics",
+   "fieldtype": "Section Break",
+   "label": "Performance Metrics"
+  },
+  {
+   "description": "Total makespan of schedule",
+   "fieldname": "makespan_minutes",
+   "fieldtype": "Int",
+   "label": "Makespan (minutes)",
+   "read_only": 1
+  },
+  {
+   "description": "Sum of all job tardiness",
+   "fieldname": "total_tardiness_minutes",
+   "fieldtype": "Int",
+   "label": "Total Tardiness (minutes)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_metrics",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Average machine utilization percentage",
+   "fieldname": "machine_utilization",
+   "fieldtype": "Float",
+   "label": "Avg Machine Utilization (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_meta",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-06 01:41:19.284286",
+ "modified_by": "Administrator",
+ "module": "UIT APS",
+ "name": "APS Scheduling Run",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
 }
