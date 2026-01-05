@@ -148,7 +148,9 @@ $.extend(cur_frm, {
                     frappe.call({
                         method: "uit_aps.scheduling.api.scheduling_api.run_ortools_scheduling",
                         args: {
-                            production_plan: frm.doc.production_plan,
+                            // Pass existing scheduling_run name - API will use this record
+                            scheduling_run: frm.doc.name,
+                            scheduling_strategy: frm.doc.scheduling_strategy || "Forward Scheduling",
                             time_limit_seconds: frm.doc.time_limit_seconds || 300,
                             makespan_weight: frm.doc.makespan_weight || 1.0,
                             tardiness_weight: frm.doc.tardiness_weight || 10.0
@@ -222,7 +224,8 @@ $.extend(cur_frm, {
                     frappe.call({
                         method: "uit_aps.scheduling.hybrid_scheduler.run_hybrid_scheduling",
                         args: {
-                            production_plan: frm.doc.production_plan,
+                            // Pass existing scheduling_run name - API will use this record
+                            scheduling_run: frm.doc.name,
                             enable_rl: values.enable_rl,
                             rl_agent_type: values.rl_agent_type,
                             time_limit_seconds: values.time_limit

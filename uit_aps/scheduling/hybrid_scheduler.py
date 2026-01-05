@@ -142,10 +142,10 @@ class HybridScheduler:
         return run_ortools_scheduling(
             production_plan=production_plan,
             work_orders=",".join(work_orders) if work_orders else None,
+            scheduling_run=scheduling_run,
             time_limit_seconds=self.config.ortools_time_limit,
             makespan_weight=self.config.makespan_weight,
-            tardiness_weight=self.config.tardiness_weight,
-            create_scheduling_run=scheduling_run is None
+            tardiness_weight=self.config.tardiness_weight
         )
 
     def _initialize_rl_agent(self):
@@ -281,6 +281,7 @@ class HybridScheduler:
 def run_hybrid_scheduling(
     production_plan: str = None,
     work_orders: str = None,
+    scheduling_run: str = None,
     enable_rl: bool = True,
     rl_agent_type: str = "ppo",
     time_limit_seconds: int = 300
@@ -291,6 +292,7 @@ def run_hybrid_scheduling(
     Args:
         production_plan: ERPNext Production Plan name (auto-creates Work Orders and Job Cards)
         work_orders: Comma-separated Work Order names (alternative)
+        scheduling_run: Existing APS Scheduling Run name to update (if provided, uses this record)
         enable_rl: Enable Tier 2 RL adjustments
         rl_agent_type: "ppo" or "sac"
         time_limit_seconds: OR-Tools time limit
@@ -298,6 +300,23 @@ def run_hybrid_scheduling(
     Returns:
         dict with scheduling results
     """
+    from frappe import _
+    from frappe.utils import now_datetime
+
+    # If scheduling_run is provided, use that record and get production_plan from it
+    if scheduling_run:
+        if not frappe.db.exists("APS Scheduling Run", scheduling_run):
+            frappe.throw(_("APS Scheduling Run {0} not found").format(scheduling_run))
+
+        run_doc = frappe.get_doc("APS Scheduling Run", scheduling_run)
+        production_plan = run_doc.production_plan
+
+        # Update status to Running
+        run_doc.db_set("run_status", "Running")
+        run_doc.db_set("run_date", now_datetime())
+        run_doc.db_set("executed_by", frappe.session.user)
+        frappe.db.commit()
+
     config = HybridSchedulerConfig(
         enable_rl_adjustments=enable_rl,
         rl_agent_type=rl_agent_type,
@@ -312,7 +331,8 @@ def run_hybrid_scheduling(
 
     return scheduler.schedule(
         production_plan=production_plan,
-        work_orders=work_order_list
+        work_orders=work_order_list,
+        scheduling_run=scheduling_run
     )
 
 

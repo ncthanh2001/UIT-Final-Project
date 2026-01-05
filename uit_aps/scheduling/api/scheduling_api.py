@@ -18,11 +18,11 @@ from typing import List, Optional
 def run_ortools_scheduling(
     production_plan: str = None,
     work_orders: str = None,
+    scheduling_run: str = None,
     scheduling_strategy: str = "Forward Scheduling",
     time_limit_seconds: int = 300,
     makespan_weight: float = 1.0,
-    tardiness_weight: float = 10.0,
-    create_scheduling_run: bool = True
+    tardiness_weight: float = 10.0
 ) -> dict:
     """
     Run OR-Tools optimal scheduling.
@@ -30,16 +30,16 @@ def run_ortools_scheduling(
     Args:
         production_plan: Name of ERPNext Production Plan (creates Work Orders and Job Cards automatically)
         work_orders: Comma-separated list of Work Order names (alternative to production_plan)
+        scheduling_run: Existing APS Scheduling Run name to update (if provided, uses this record)
         scheduling_strategy: Strategy type
         time_limit_seconds: Solver time limit
         makespan_weight: Weight for makespan objective
         tardiness_weight: Weight for tardiness objective
-        create_scheduling_run: Whether to create APS Scheduling Run record
 
     Returns:
         dict: {
             success: bool,
-            scheduling_run: str (if created),
+            scheduling_run: str,
             status: str,
             makespan_minutes: int,
             total_jobs: int,
@@ -54,6 +54,22 @@ def run_ortools_scheduling(
     from uit_aps.scheduling.data.erpnext_loader import ERPNextDataLoader
     from uit_aps.scheduling.data.exporters import SchedulingExporter
 
+    # If scheduling_run is provided, use that record and get production_plan from it
+    scheduling_run_name = None
+    if scheduling_run:
+        if not frappe.db.exists("APS Scheduling Run", scheduling_run):
+            frappe.throw(_("APS Scheduling Run {0} not found").format(scheduling_run))
+
+        run_doc = frappe.get_doc("APS Scheduling Run", scheduling_run)
+        scheduling_run_name = scheduling_run
+        production_plan = run_doc.production_plan
+
+        # Update status to Running
+        run_doc.db_set("run_status", "Running")
+        run_doc.db_set("run_date", now_datetime())
+        run_doc.db_set("executed_by", frappe.session.user)
+        frappe.db.commit()
+
     # Validate inputs
     if not production_plan and not work_orders:
         frappe.throw(_("Either production_plan or work_orders must be provided"))
@@ -62,21 +78,6 @@ def run_ortools_scheduling(
     work_order_list = None
     if work_orders:
         work_order_list = [wo.strip() for wo in work_orders.split(",") if wo.strip()]
-
-    # Create scheduling run record
-    scheduling_run_name = None
-    if create_scheduling_run:
-        scheduling_run = frappe.get_doc({
-            "doctype": "APS Scheduling Run",
-            "production_plan": production_plan,
-            "run_status": "Running",
-            "scheduling_strategy": scheduling_strategy,
-            "run_date": now_datetime(),
-            "executed_by": frappe.session.user
-        })
-        scheduling_run.insert(ignore_permissions=True)
-        scheduling_run_name = scheduling_run.name
-        frappe.db.commit()
 
     try:
         # Configure scheduler
