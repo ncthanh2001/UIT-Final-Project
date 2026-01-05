@@ -411,6 +411,12 @@ class ERPNextDataLoader:
         """
         Load working hour slots for a workstation.
 
+        ERPNext Workstation Working Hour fields:
+        - start_time: Time - Start time of working slot
+        - end_time: Time - End time of working slot
+        - enabled: Check (default 1) - Whether this slot is enabled
+        - hours: Float (read_only) - Calculated hours
+
         Args:
             workstation: Workstation name
 
@@ -419,9 +425,10 @@ class ERPNextDataLoader:
         """
         slots = []
 
+        # Only load enabled working hours (enabled=1)
         working_hours = frappe.get_all(
             "Workstation Working Hour",
-            filters={"parent": workstation},
+            filters={"parent": workstation, "enabled": 1},
             fields=["start_time", "end_time"],
             order_by="start_time asc"
         )

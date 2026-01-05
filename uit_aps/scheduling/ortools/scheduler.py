@@ -130,6 +130,7 @@ class ORToolsScheduler:
         # Add constraints
         self._add_precedence_constraints()
         self._add_no_overlap_constraints()
+        self._add_working_hours_constraints()
 
         # Set objective
         self._set_objective()
@@ -206,6 +207,78 @@ class ORToolsScheduler:
         for machine_id, intervals in self._machine_to_intervals.items():
             if len(intervals) > 1:
                 self.model.AddNoOverlap(intervals)
+
+    def _add_working_hours_constraints(self) -> None:
+        """
+        Add working hours constraints: operations should be scheduled within machine working hours.
+
+        This constraint ensures operations are scheduled during available working hours.
+        For each machine with defined working hours, operations assigned to that machine
+        must start and end within one of the working hour slots.
+
+        Working hours are loaded from ERPNext Workstation Working Hour child table.
+        """
+        if self.config.allow_overtime:
+            # Skip working hours constraints if overtime is allowed
+            return
+
+        # Build mapping of operation -> assigned machine
+        op_to_machine = {}
+        for job in self.problem.jobs:
+            for op in job.operations:
+                if op.eligible_machines:
+                    # Currently using first eligible machine (TODO: optimize machine selection)
+                    op_to_machine[op.id] = op.eligible_machines[0]
+
+        # Get unique days in the scheduling horizon
+        horizon_days = self.config.horizon_days or 30
+
+        for op_id, machine_id in op_to_machine.items():
+            machine = self.problem.get_machine_by_id(machine_id)
+            if not machine or not machine.working_hours:
+                continue
+
+            # Build allowed time windows across the horizon
+            # Each working hour slot is converted to minutes from schedule start
+            allowed_starts = []
+
+            for day_offset in range(horizon_days):
+                current_date = self._schedule_start + timedelta(days=day_offset)
+
+                for slot in machine.working_hours:
+                    # Convert slot times to minutes from schedule start
+                    slot_start_dt = datetime.combine(current_date.date(), slot.start_time)
+                    slot_end_dt = datetime.combine(current_date.date(), slot.end_time)
+
+                    # Handle overnight shifts
+                    if slot_end_dt < slot_start_dt:
+                        slot_end_dt += timedelta(days=1)
+
+                    start_mins = self._datetime_to_minutes(slot_start_dt)
+                    end_mins = self._datetime_to_minutes(slot_end_dt)
+
+                    # Only include valid time windows (positive and within horizon)
+                    if start_mins >= 0 and start_mins < self._horizon_minutes:
+                        allowed_starts.append((max(0, start_mins), min(self._horizon_minutes, end_mins)))
+
+            # If working hours are defined, add constraint that operation must fit in one slot
+            if allowed_starts and op_id in self._operation_starts:
+                start_var = self._operation_starts[op_id]
+                end_var = self._operation_ends[op_id]
+
+                # Create boolean variables for each possible slot
+                slot_bools = []
+                for i, (slot_start, slot_end) in enumerate(allowed_starts):
+                    slot_bool = self.model.NewBoolVar(f"slot_{op_id}_{i}")
+                    slot_bools.append(slot_bool)
+
+                    # If this slot is chosen, operation must be within its bounds
+                    self.model.Add(start_var >= slot_start).OnlyEnforceIf(slot_bool)
+                    self.model.Add(end_var <= slot_end).OnlyEnforceIf(slot_bool)
+
+                # Operation must be in exactly one slot
+                if slot_bools:
+                    self.model.AddExactlyOne(slot_bools)
 
     def _set_objective(self) -> None:
         """
