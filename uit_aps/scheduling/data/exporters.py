@@ -162,38 +162,41 @@ class SchedulingExporter:
         """
         Update APS Scheduling Run with solution metrics.
 
+        Uses db_set to avoid document version conflicts when the form is open.
+
         Args:
             solution: SchedulingSolution
             stats: Export statistics
         """
         try:
-            run = frappe.get_doc("APS Scheduling Run", self.scheduling_run)
+            # Use db_set to avoid version conflicts with open documents
+            # This bypasses the document versioning system
+            update_values = {
+                "run_status": "Completed" if solution.is_feasible else "Failed",
+                "total_job_cards": len(solution.operations),
+                "total_late_jobs": solution.jobs_late,
+                "jobs_on_time": solution.jobs_on_time,
+                "makespan_minutes": solution.makespan_mins,
+                "solver_status": solution.status.value,
+                "solve_time_seconds": solution.solve_time_secs,
+                "machine_utilization": solution.average_utilization,
+                "gap_percentage": solution.gap_percentage
+            }
 
-            run.run_status = "Completed" if solution.is_feasible else "Failed"
-            run.total_job_cards = len(solution.operations)
-            run.total_late_jobs = solution.jobs_late
-
-            # Update additional fields if they exist
-            if hasattr(run, 'makespan_minutes'):
-                run.makespan_minutes = solution.makespan_mins
-
-            if hasattr(run, 'solver_status'):
-                run.solver_status = solution.status.value
-
-            if hasattr(run, 'solve_time_seconds'):
-                run.solve_time_seconds = solution.solve_time_secs
-
-            if hasattr(run, 'machine_utilization'):
-                run.machine_utilization = solution.average_utilization
-
-            if hasattr(run, 'gap_percentage'):
-                run.gap_percentage = solution.gap_percentage
-
-            # Add notes about errors
+            # Add notes about errors if any
             if stats["errors"]:
-                run.notes = (run.notes or "") + "\n\nExport Errors:\n" + "\n".join(stats["errors"][:5])
+                existing_notes = frappe.db.get_value(
+                    "APS Scheduling Run", self.scheduling_run, "notes"
+                ) or ""
+                update_values["notes"] = existing_notes + "\n\nExport Errors:\n" + "\n".join(stats["errors"][:5])
 
-            run.save(ignore_permissions=True)
+            # Update using db_set_value to avoid version conflicts
+            frappe.db.set_value(
+                "APS Scheduling Run",
+                self.scheduling_run,
+                update_values,
+                update_modified=True
+            )
 
         except Exception as e:
             frappe.log_error(

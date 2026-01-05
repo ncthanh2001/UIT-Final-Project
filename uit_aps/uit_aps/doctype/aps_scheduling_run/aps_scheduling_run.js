@@ -143,47 +143,45 @@ $.extend(cur_frm, {
         frappe.confirm(
             __("Run OR-Tools scheduling for this production plan?"),
             function() {
-                frm.set_value("run_status", "Running");
-                frm.save().then(() => {
-                    frappe.call({
-                        method: "uit_aps.scheduling.api.scheduling_api.run_ortools_scheduling",
-                        args: {
-                            // Pass existing scheduling_run name - API will use this record
-                            scheduling_run: frm.doc.name,
-                            scheduling_strategy: frm.doc.scheduling_strategy || "Forward Scheduling",
-                            time_limit_seconds: frm.doc.time_limit_seconds || 300,
-                            makespan_weight: frm.doc.makespan_weight || 1.0,
-                            tardiness_weight: frm.doc.tardiness_weight || 10.0
-                        },
-                        freeze: true,
-                        freeze_message: __("Running OR-Tools CP-SAT solver..."),
-                        callback: function(r) {
-                            if (r.message && r.message.success) {
-                                frm.update_from_scheduling_result(r.message);
-                                frappe.show_alert({
-                                    message: __("Scheduling completed successfully!"),
-                                    indicator: "green"
-                                });
-                            } else {
-                                frm.set_value("run_status", "Failed");
-                                frm.save();
-                                frappe.msgprint({
-                                    title: __("Scheduling Failed"),
-                                    message: r.message ? r.message.message : __("Unknown error"),
-                                    indicator: "red"
-                                });
-                            }
-                        },
-                        error: function(r) {
-                            frm.set_value("run_status", "Failed");
-                            frm.save();
+                // API will handle status updates - no need to save here
+                frappe.call({
+                    method: "uit_aps.scheduling.api.scheduling_api.run_ortools_scheduling",
+                    args: {
+                        // Pass existing scheduling_run name - API will use this record
+                        scheduling_run: frm.doc.name,
+                        scheduling_strategy: frm.doc.scheduling_strategy || "Forward Scheduling",
+                        time_limit_seconds: frm.doc.time_limit_seconds || 300,
+                        makespan_weight: frm.doc.makespan_weight || 1.0,
+                        tardiness_weight: frm.doc.tardiness_weight || 10.0
+                    },
+                    freeze: true,
+                    freeze_message: __("Running OR-Tools CP-SAT solver..."),
+                    callback: function(r) {
+                        if (r.message && r.message.success) {
+                            frappe.show_alert({
+                                message: __("Scheduling completed successfully!"),
+                                indicator: "green"
+                            });
+                            // Reload form to get updated values from server
+                            frm.reload_doc();
+                        } else {
                             frappe.msgprint({
-                                title: __("Error"),
-                                message: __("Failed to run scheduling"),
+                                title: __("Scheduling Failed"),
+                                message: r.message ? r.message.message : __("Unknown error"),
                                 indicator: "red"
                             });
+                            // Reload to get current status
+                            frm.reload_doc();
                         }
-                    });
+                    },
+                    error: function(r) {
+                        frappe.msgprint({
+                            title: __("Error"),
+                            message: __("Failed to run scheduling"),
+                            indicator: "red"
+                        });
+                        frm.reload_doc();
+                    }
                 });
             }
         );
@@ -219,53 +217,55 @@ $.extend(cur_frm, {
             primary_action_label: __("Run"),
             primary_action: function(values) {
                 d.hide();
-                frm.set_value("run_status", "Running");
-                frm.save().then(() => {
-                    frappe.call({
-                        method: "uit_aps.scheduling.hybrid_scheduler.run_hybrid_scheduling",
-                        args: {
-                            // Pass existing scheduling_run name - API will use this record
-                            scheduling_run: frm.doc.name,
-                            enable_rl: values.enable_rl,
-                            rl_agent_type: values.rl_agent_type,
-                            time_limit_seconds: values.time_limit
-                        },
-                        freeze: true,
-                        freeze_message: __("Running hybrid scheduling (Tier 1 + Tier 2)..."),
-                        callback: function(r) {
-                            if (r.message && r.message.success) {
-                                frm.update_from_hybrid_result(r.message);
-                                frappe.show_alert({
-                                    message: __("Hybrid scheduling completed!"),
-                                    indicator: "green"
-                                });
-                            } else {
-                                frm.set_value("run_status", "Failed");
-                                frm.save();
-                                frappe.msgprint({
-                                    title: __("Scheduling Failed"),
-                                    message: r.message ? r.message.message : __("Unknown error"),
-                                    indicator: "red"
-                                });
-                            }
+                // API will handle status updates - no need to save here
+                frappe.call({
+                    method: "uit_aps.scheduling.hybrid_scheduler.run_hybrid_scheduling",
+                    args: {
+                        // Pass existing scheduling_run name - API will use this record
+                        scheduling_run: frm.doc.name,
+                        enable_rl: values.enable_rl,
+                        rl_agent_type: values.rl_agent_type,
+                        time_limit_seconds: values.time_limit
+                    },
+                    freeze: true,
+                    freeze_message: __("Running hybrid scheduling (Tier 1 + Tier 2)..."),
+                    callback: function(r) {
+                        if (r.message && r.message.success) {
+                            frappe.show_alert({
+                                message: __("Hybrid scheduling completed!"),
+                                indicator: "green"
+                            });
+                            // Reload form to get updated values from server
+                            frm.reload_doc();
+                        } else {
+                            frappe.msgprint({
+                                title: __("Scheduling Failed"),
+                                message: r.message ? r.message.message : __("Unknown error"),
+                                indicator: "red"
+                            });
+                            frm.reload_doc();
                         }
-                    });
+                    },
+                    error: function(r) {
+                        frappe.msgprint({
+                            title: __("Error"),
+                            message: __("Failed to run hybrid scheduling"),
+                            indicator: "red"
+                        });
+                        frm.reload_doc();
+                    }
                 });
             }
         });
         d.show();
     },
 
+    // Note: update_from_scheduling_result is no longer used - API updates directly
     update_from_scheduling_result: function(result) {
+        // Deprecated - API now updates the record directly
+        // Keeping for backwards compatibility
         let frm = this;
-        frm.set_value("run_status", "Completed");
-        frm.set_value("solver_status", result.status || "Optimal");
-        frm.set_value("total_job_cards", result.total_operations || 0);
-        frm.set_value("jobs_on_time", result.jobs_on_time || 0);
-        frm.set_value("total_late_jobs", result.jobs_late || 0);
-        frm.set_value("makespan_minutes", result.makespan_minutes || 0);
-        frm.set_value("solve_time_seconds", result.solve_time_seconds || 0);
-        frm.save();
+        frm.reload_doc();
     },
 
     update_from_hybrid_result: function(result) {
