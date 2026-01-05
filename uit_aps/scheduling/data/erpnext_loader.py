@@ -343,27 +343,27 @@ class ERPNextDataLoader:
             List of workstation names
         """
         if workstation:
-            # Check if workstation exists and is not disabled
-            if frappe.db.exists("Workstation", {"name": workstation, "disabled": 0}):
+            # Check if workstation exists and is available (status != "Off")
+            if frappe.db.exists("Workstation", {"name": workstation, "status": ["!=", "Off"]}):
                 return [workstation]
 
         if workstation_type:
-            # Get all workstations of this type
+            # Get all workstations of this type that are available
             machines = frappe.get_all(
                 "Workstation",
                 filters={
                     "workstation_type": workstation_type,
-                    "disabled": 0
+                    "status": ["!=", "Off"]
                 },
                 pluck="name"
             )
             if machines:
                 return machines
 
-        # Fallback: return all available workstations
+        # Fallback: return all available workstations (status != "Off")
         return frappe.get_all(
             "Workstation",
-            filters={"disabled": 0},
+            filters={"status": ["!=", "Off"]},
             pluck="name"
         ) or []
 
@@ -374,17 +374,25 @@ class ERPNextDataLoader:
         Returns:
             List of Machine objects
         """
+        # ERPNext Workstation uses status field instead of disabled
+        # Available statuses: Production, Off, Idle, Problem, Maintenance, Setup
+        # We exclude "Off" status workstations
         workstations = frappe.get_all(
             "Workstation",
-            filters={"disabled": 0},
+            filters={"status": ["!=", "Off"]},
             fields=["name", "workstation_name", "workstation_type",
-                    "production_capacity", "holiday_list"]
+                    "production_capacity", "holiday_list", "status"]
         )
 
         machines = []
         for ws in workstations:
             # Load working hours
             working_hours = self._load_working_hours(ws.name)
+
+            # Determine availability based on status
+            # Production, Idle, Setup = available for scheduling
+            # Problem, Maintenance = temporarily unavailable but included
+            is_available = ws.status in ["Production", "Idle", "Setup", None, ""]
 
             machine = Machine(
                 id=ws.name,
@@ -393,7 +401,7 @@ class ERPNextDataLoader:
                 capacity=cint(ws.production_capacity) or 1,
                 working_hours=working_hours,
                 holiday_list=ws.holiday_list,
-                is_available=True
+                is_available=is_available
             )
             machines.append(machine)
 

@@ -524,20 +524,24 @@ def train_rl_agent(
 
 def _load_machines() -> List[Dict]:
     """Load workstations as machine configurations."""
+    # ERPNext Workstation uses status field instead of disabled
+    # Available statuses: Production, Off, Idle, Problem, Maintenance, Setup
     workstations = frappe.get_all(
         "Workstation",
-        filters={"disabled": 0},
-        fields=["name", "workstation_name", "workstation_type", "production_capacity"]
+        filters={"status": ["!=", "Off"]},
+        fields=["name", "workstation_name", "workstation_type", "production_capacity", "status"]
     )
 
     machines = []
     for ws in workstations:
+        # Map ERPNext status to scheduling status
+        sched_status = "available" if ws.status in ["Production", "Idle", "Setup", None, ""] else "unavailable"
         machines.append({
             "id": ws.name,
             "name": ws.workstation_name or ws.name,
             "type": ws.workstation_type,
             "capacity": cint(ws.production_capacity) or 1,
-            "status": "available",
+            "status": sched_status,
             "utilization": 0.0
         })
 
