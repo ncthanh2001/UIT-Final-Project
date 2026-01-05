@@ -140,6 +140,16 @@ $.extend(cur_frm, {
     run_tier1_scheduling: function() {
         let frm = this;
 
+        // Check if form has unsaved changes
+        if (frm.is_dirty()) {
+            frappe.msgprint({
+                title: __("Unsaved Changes"),
+                message: __("Please save the document first before running scheduling."),
+                indicator: "orange"
+            });
+            return;
+        }
+
         frappe.confirm(
             __("Run OR-Tools scheduling for this production plan?"),
             function() {
@@ -189,6 +199,16 @@ $.extend(cur_frm, {
 
     run_hybrid_scheduling: function() {
         let frm = this;
+
+        // Check if form has unsaved changes
+        if (frm.is_dirty()) {
+            frappe.msgprint({
+                title: __("Unsaved Changes"),
+                message: __("Please save the document first before running scheduling."),
+                indicator: "orange"
+            });
+            return;
+        }
 
         let d = new frappe.ui.Dialog({
             title: __("Run Hybrid Scheduling"),

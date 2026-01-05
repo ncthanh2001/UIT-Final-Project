@@ -60,14 +60,22 @@ def run_ortools_scheduling(
         if not frappe.db.exists("APS Scheduling Run", scheduling_run):
             frappe.throw(_("APS Scheduling Run {0} not found").format(scheduling_run))
 
-        run_doc = frappe.get_doc("APS Scheduling Run", scheduling_run)
+        # Get production_plan from the existing record
+        production_plan = frappe.db.get_value("APS Scheduling Run", scheduling_run, "production_plan")
         scheduling_run_name = scheduling_run
-        production_plan = run_doc.production_plan
 
-        # Update status to Running
-        run_doc.db_set("run_status", "Running")
-        run_doc.db_set("run_date", now_datetime())
-        run_doc.db_set("executed_by", frappe.session.user)
+        # Update status to Running using frappe.db.set_value to avoid version conflicts
+        # This bypasses document versioning and won't cause "Document has been modified" errors
+        frappe.db.set_value(
+            "APS Scheduling Run",
+            scheduling_run,
+            {
+                "run_status": "Running",
+                "run_date": now_datetime(),
+                "executed_by": frappe.session.user
+            },
+            update_modified=False  # Don't update modified timestamp yet
+        )
         frappe.db.commit()
 
     # Validate inputs
