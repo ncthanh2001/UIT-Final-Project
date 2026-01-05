@@ -48,12 +48,13 @@ class ERPNextDataLoader:
         config: SchedulingConfig = None
     ) -> SchedulingProblem:
         """
-        Load scheduling problem from APS Production Plan.
+        Load scheduling problem from ERPNext Production Plan.
 
-        Creates Work Orders if they don't exist, then loads Job Cards.
+        ERPNext Production Plan automatically creates Work Orders and Job Cards,
+        so we just need to load the existing Work Orders.
 
         Args:
-            production_plan: Name of APS Production Plan
+            production_plan: Name of ERPNext Production Plan
             config: Scheduling configuration
 
         Returns:
@@ -62,19 +63,48 @@ class ERPNextDataLoader:
         if config is None:
             config = SchedulingConfig()
 
-        plan_doc = frappe.get_doc("APS Production Plan", production_plan)
+        plan_doc = frappe.get_doc("Production Plan", production_plan)
 
-        if plan_doc.status not in ["Draft", "Planned", "Released"]:
-            frappe.throw(f"Production Plan {production_plan} is not in schedulable status")
+        # ERPNext Production Plan uses docstatus for workflow
+        if plan_doc.docstatus == 2:
+            frappe.throw(f"Production Plan {production_plan} is cancelled")
 
         jobs = []
-        for item in plan_doc.items:
-            # Get or create Work Order for this item
-            work_order = self._get_or_create_work_order(item, plan_doc)
-            if work_order:
-                job = self._convert_work_order_to_job(work_order, item)
-                if job and job.operations:
-                    jobs.append(job)
+
+        # Get Work Orders linked to this Production Plan
+        work_orders = frappe.get_all(
+            "Work Order",
+            filters={
+                "production_plan": production_plan,
+                "docstatus": 1,
+                "status": ["not in", ["Completed", "Stopped", "Cancelled"]]
+            },
+            pluck="name"
+        )
+
+        # If no Work Orders found, try to get from Production Plan Items
+        if not work_orders:
+            # Load from po_items (Production Plan Item table)
+            for item in plan_doc.po_items:
+                # Get Work Orders for this item
+                item_work_orders = frappe.get_all(
+                    "Work Order",
+                    filters={
+                        "production_item": item.item_code,
+                        "planned_start_date": [">=", item.planned_start_date] if item.planned_start_date else ["is", "set"],
+                        "docstatus": 1,
+                        "status": ["not in", ["Completed", "Stopped", "Cancelled"]]
+                    },
+                    pluck="name"
+                )
+                work_orders.extend(item_work_orders)
+
+        # Convert Work Orders to Jobs
+        for wo_name in work_orders:
+            work_order = frappe.get_doc("Work Order", wo_name)
+            job = self._convert_work_order_to_job(work_order)
+            if job and job.operations:
+                jobs.append(job)
 
         # Load machines (workstations)
         machines = self._load_workstations()
@@ -133,67 +163,6 @@ class ERPNextDataLoader:
             machines=machines,
             config=config
         )
-
-    def _get_or_create_work_order(
-        self,
-        plan_item,
-        plan_doc
-    ) -> Optional["frappe._dict"]:
-        """
-        Get existing Work Order or create new one from Production Plan Item.
-
-        Args:
-            plan_item: APS Production Plan Item
-            plan_doc: Parent APS Production Plan
-
-        Returns:
-            Work Order document or None
-        """
-        # Check if Work Order already exists for this item
-        existing_wo = frappe.db.exists("Work Order", {
-            "production_item": plan_item.item,
-            "planned_start_date": [">=", plan_item.planned_start_date or plan_item.plan_period],
-            "docstatus": ["<", 2],
-            "status": ["not in", ["Completed", "Stopped", "Cancelled"]]
-        })
-
-        if existing_wo:
-            return frappe.get_doc("Work Order", existing_wo)
-
-        # Get BOM for item
-        bom = self._get_default_bom(plan_item.item)
-        if not bom:
-            frappe.log_error(
-                f"No BOM found for item {plan_item.item}",
-                "Scheduling - Missing BOM"
-            )
-            return None
-
-        try:
-            # Create new Work Order
-            wo = frappe.get_doc({
-                "doctype": "Work Order",
-                "production_item": plan_item.item,
-                "bom_no": bom,
-                "qty": plan_item.planned_qty,
-                "company": plan_doc.company,
-                "planned_start_date": plan_item.planned_start_date or plan_item.plan_period,
-                "expected_delivery_date": plan_item.plan_period,
-                "use_multi_level_bom": 1,
-                "skip_transfer": 0
-            })
-            wo.insert(ignore_permissions=True)
-            wo.submit()
-            frappe.db.commit()
-
-            return wo
-
-        except Exception as e:
-            frappe.log_error(
-                f"Failed to create Work Order for {plan_item.item}: {str(e)}",
-                "Scheduling - Work Order Creation Error"
-            )
-            return None
 
     def _convert_work_order_to_job(
         self,
@@ -528,3 +497,80 @@ class ERPNextDataLoader:
         )
 
         return [get_datetime(h) for h in holidays]
+
+
+def load_scheduling_data(scheduling_run: str) -> Optional[Dict]:
+    """
+    Load scheduling data from an APS Scheduling Run.
+
+    This is a convenience function used by RL and GNN modules to load
+    schedule data for training/inference.
+
+    Args:
+        scheduling_run: APS Scheduling Run name
+
+    Returns:
+        Dict with operations and machines, or None if not found
+    """
+    try:
+        run_doc = frappe.get_doc("APS Scheduling Run", scheduling_run)
+
+        # Get scheduled results
+        results = frappe.get_all(
+            "APS Scheduling Result",
+            filters={"scheduling_run": scheduling_run},
+            fields=[
+                "name", "job_card", "workstation", "operation",
+                "planned_start_time", "planned_end_time", "is_late"
+            ],
+            order_by="planned_start_time asc"
+        )
+
+        operations = []
+        for r in results:
+            # Get Job Card details
+            jc = frappe.get_doc("Job Card", r.job_card)
+
+            # Calculate duration
+            duration_mins = 0
+            if r.planned_start_time and r.planned_end_time:
+                duration_mins = int((r.planned_end_time - r.planned_start_time).total_seconds() / 60)
+
+            operations.append({
+                "operation_id": r.name,
+                "job_card": r.job_card,
+                "job_id": jc.work_order,
+                "operation_name": r.operation or jc.operation,
+                "machine_id": r.workstation,
+                "start_time": r.planned_start_time.timestamp() if r.planned_start_time else 0,
+                "end_time": r.planned_end_time.timestamp() if r.planned_end_time else 0,
+                "duration_mins": duration_mins,
+                "due_date": jc.expected_end_date.timestamp() if jc.expected_end_date else None,
+                "priority": 1,
+                "is_late": r.is_late
+            })
+
+        # Get machines
+        loader = ERPNextDataLoader()
+        machine_objs = loader._load_workstations()
+        machines = [
+            {
+                "machine_id": m.id,
+                "name": m.name,
+                "machine_type": m.machine_type,
+                "capacity": m.capacity,
+                "operation_types": [m.machine_type] if m.machine_type else []
+            }
+            for m in machine_objs
+        ]
+
+        return {
+            "scheduling_run": scheduling_run,
+            "production_plan": run_doc.production_plan,
+            "operations": operations,
+            "machines": machines
+        }
+
+    except Exception as e:
+        frappe.log_error(f"Failed to load scheduling data: {str(e)}", "Scheduling Data Load Error")
+        return None

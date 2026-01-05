@@ -28,8 +28,8 @@ def run_ortools_scheduling(
     Run OR-Tools optimal scheduling.
 
     Args:
-        production_plan: Name of APS Production Plan
-        work_orders: Comma-separated list of Work Order names (alternative)
+        production_plan: Name of ERPNext Production Plan (creates Work Orders and Job Cards automatically)
+        work_orders: Comma-separated list of Work Order names (alternative to production_plan)
         scheduling_strategy: Strategy type
         time_limit_seconds: Solver time limit
         makespan_weight: Weight for makespan objective

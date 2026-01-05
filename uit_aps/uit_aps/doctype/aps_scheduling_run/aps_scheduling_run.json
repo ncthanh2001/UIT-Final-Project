@@ -46,9 +46,9 @@
       "fieldname": "production_plan",
       "fieldtype": "Link",
       "label": "Production Plan",
-      "options": "APS Production Plan",
+      "options": "Production Plan",
       "reqd": 1,
-      "description": "Ke hoach san xuat duoc dung de chay APS Scheduling"
+      "description": "ERPNext Production Plan - automatically creates Work Orders and Job Cards"
     },
     {
       "fieldname": "run_status",

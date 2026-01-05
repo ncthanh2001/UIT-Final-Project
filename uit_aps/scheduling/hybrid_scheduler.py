@@ -85,7 +85,7 @@ class HybridScheduler:
         Run the full hybrid scheduling pipeline.
 
         Args:
-            production_plan: APS Production Plan name
+            production_plan: ERPNext Production Plan name (auto-creates Work Orders and Job Cards)
             work_orders: List of Work Order names
             scheduling_run: Existing APS Scheduling Run to update
 
@@ -289,8 +289,8 @@ def run_hybrid_scheduling(
     Frappe API for hybrid scheduling.
 
     Args:
-        production_plan: APS Production Plan name
-        work_orders: Comma-separated Work Order names
+        production_plan: ERPNext Production Plan name (auto-creates Work Orders and Job Cards)
+        work_orders: Comma-separated Work Order names (alternative)
         enable_rl: Enable Tier 2 RL adjustments
         rl_agent_type: "ppo" or "sac"
         time_limit_seconds: OR-Tools time limit
