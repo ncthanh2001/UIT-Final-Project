@@ -297,18 +297,27 @@ def reschedule_from_job_card(
 
     if new_start_time:
         start_dt = datetime.fromisoformat(new_start_time)
-        duration_mins = jc.time_in_mins or 60
+
+        # Get duration - priority: Job Card time_required > Work Order operation time_in_mins > default
+        duration_mins = cint(jc.time_required) if hasattr(jc, 'time_required') and jc.time_required else 60
+        if not duration_mins and jc.work_order:
+            wo = frappe.get_doc("Work Order", jc.work_order)
+            for op in wo.operations:
+                if op.operation == jc.operation:
+                    duration_mins = cint(op.time_in_mins) or 60
+                    break
 
         jc.expected_start_date = start_dt
         jc.expected_end_date = start_dt + timedelta(minutes=duration_mins)
 
-        # Update scheduled time logs
-        jc.scheduled_time_logs = []
-        jc.append("scheduled_time_logs", {
-            "from_time": start_dt,
-            "to_time": jc.expected_end_date,
-            "time_in_mins": duration_mins
-        })
+        # Update time logs (Job Card Time Log child table for tracking)
+        if hasattr(jc, "time_logs") and not jc.time_logs:
+            jc.append("time_logs", {
+                "from_time": start_dt,
+                "to_time": jc.expected_end_date,
+                "time_in_mins": duration_mins,
+                "completed_qty": 0
+            })
 
     jc.flags.ignore_validate_update_after_submit = True
     jc.save(ignore_permissions=True)

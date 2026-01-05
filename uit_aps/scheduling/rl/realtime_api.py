@@ -22,6 +22,37 @@ import json
 _agent_cache: Dict[str, Any] = {}
 
 
+def _get_operation_duration(job_card) -> int:
+    """
+    Get operation duration from Job Card or Work Order.
+
+    Priority: Job Card time_required > Work Order operation time_in_mins > default
+
+    Args:
+        job_card: Job Card document
+
+    Returns:
+        Duration in minutes (default 60 if not found)
+    """
+    # First try Job Card's time_required field
+    if hasattr(job_card, 'time_required') and cint(job_card.time_required):
+        return cint(job_card.time_required)
+
+    # Fallback to Work Order operation time_in_mins
+    if not job_card.work_order:
+        return 60
+
+    try:
+        wo = frappe.get_doc("Work Order", job_card.work_order)
+        for op in wo.operations:
+            if op.operation == job_card.operation:
+                return cint(op.time_in_mins) or 60
+    except Exception:
+        pass
+
+    return 60
+
+
 def get_rl_agent(agent_type: str = "ppo", model_path: str = None):
     """
     Get or load RL agent from cache.
@@ -237,7 +268,9 @@ def apply_rl_adjustment(
             if new_start < now_datetime():
                 new_start = now_datetime()
 
-            new_end = new_start + timedelta(minutes=jc.time_in_mins or 60)
+            # Get duration from Work Order operation since Job Card doesn't have time_in_mins
+            duration_mins = _get_operation_duration(jc)
+            new_end = new_start + timedelta(minutes=duration_mins)
 
             jc.expected_start_date = new_start
             jc.expected_end_date = new_end
@@ -258,7 +291,10 @@ def apply_rl_adjustment(
 
         elif action == ActionType.RESCHEDULE_LATER:
             new_start = jc.expected_start_date + timedelta(minutes=30)
-            new_end = new_start + timedelta(minutes=jc.time_in_mins or 60)
+
+            # Get duration from Work Order operation since Job Card doesn't have time_in_mins
+            duration_mins = _get_operation_duration(jc)
+            new_end = new_start + timedelta(minutes=duration_mins)
 
             jc.expected_start_date = new_start
             jc.expected_end_date = new_end

@@ -98,15 +98,17 @@ class SchedulingExporter:
         job_card.expected_start_date = scheduled_op.start_time
         job_card.expected_end_date = scheduled_op.end_time
 
-        # Clear existing scheduled time logs
-        job_card.scheduled_time_logs = []
-
-        # Add new scheduled time log
-        job_card.append("scheduled_time_logs", {
-            "from_time": scheduled_op.start_time,
-            "to_time": scheduled_op.end_time,
-            "time_in_mins": scheduled_op.duration_mins
-        })
+        # Update time logs if the child table exists
+        # ERPNext Job Card uses "time_logs" for actual time tracking
+        # We update expected dates which is standard ERPNext behavior
+        if hasattr(job_card, "time_logs") and not job_card.time_logs:
+            # Only add time log if none exist (don't overwrite actual time logs)
+            job_card.append("time_logs", {
+                "from_time": scheduled_op.start_time,
+                "to_time": scheduled_op.end_time,
+                "time_in_mins": scheduled_op.duration_mins,
+                "completed_qty": 0
+            })
 
         # Update workstation if assigned
         if scheduled_op.machine_id:

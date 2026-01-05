@@ -182,6 +182,10 @@ class ERPNextDataLoader:
         operations = []
 
         # Get Job Cards for this Work Order
+        # ERPNext Job Card fields:
+        # - time_required: Expected time (in mins) - this is what we need for scheduling
+        # - total_time_in_mins: Actual time logged (calculated from time_logs)
+        # - sequence_id: Operation sequence
         job_cards = frappe.get_all(
             "Job Card",
             filters={
@@ -190,13 +194,19 @@ class ERPNextDataLoader:
                 "status": ["not in", ["Completed", "Cancelled"]]
             },
             fields=["name", "operation", "workstation", "workstation_type",
-                    "for_quantity", "time_in_mins", "sequence_id"],
-            order_by="sequence_id asc"
+                    "for_quantity", "time_required", "sequence_id"],
+            order_by="sequence_id asc, name asc"
         )
 
         if not job_cards:
             # Create Job Cards from Work Order operations
             job_cards = self._create_job_cards_from_work_order(work_order)
+
+        # Build a map of operation name -> time from Work Order operations
+        wo_op_times = {}
+        if work_order.operations:
+            for op in work_order.operations:
+                wo_op_times[op.operation] = cint(op.time_in_mins) or 60
 
         for idx, jc in enumerate(job_cards):
             # Get eligible machines for this operation
@@ -212,14 +222,26 @@ class ERPNextDataLoader:
                 )
                 continue
 
+            # Get duration - priority: Job Card time_required > Work Order operation time_in_mins > default
+            op_name = jc.get("operation")
+            duration = cint(jc.get("time_required")) or wo_op_times.get(op_name, 60)
+
+            # Get sequence - priority: Job Card sequence_id > Work Order operation idx > index
+            sequence = cint(jc.get("sequence_id")) or (idx + 1)
+            if not jc.get("sequence_id") and work_order.operations:
+                for wo_op in work_order.operations:
+                    if wo_op.operation == op_name:
+                        sequence = wo_op.idx
+                        break
+
             operation = Operation(
                 id=jc.get("name"),
                 job_id=work_order.name,
-                name=jc.get("operation") or f"Operation {idx + 1}",
+                name=op_name or f"Operation {idx + 1}",
                 machine_type=jc.get("workstation_type"),
                 eligible_machines=eligible_machines,
-                duration_mins=cint(jc.get("time_in_mins")) or 60,  # Default 1 hour
-                sequence=jc.get("sequence_id") or (idx + 1),
+                duration_mins=duration,
+                sequence=sequence,
                 setup_time_mins=10  # Default setup time
             )
             operations.append(operation)
@@ -256,6 +278,9 @@ class ERPNextDataLoader:
         """
         Create Job Cards from Work Order operations if they don't exist.
 
+        Note: ERPNext typically auto-creates Job Cards when Work Order is submitted.
+        This method is a fallback for cases where Job Cards don't exist.
+
         Args:
             work_order: Work Order document
 
@@ -265,61 +290,41 @@ class ERPNextDataLoader:
         job_cards = []
 
         if not work_order.operations:
-            # No operations defined, create a single default operation
-            jc = frappe.get_doc({
-                "doctype": "Job Card",
+            # No operations defined - this shouldn't happen in ERPNext
+            # as Work Orders require operations from BOM
+            frappe.log_error(
+                f"Work Order {work_order.name} has no operations",
+                "Scheduling - No Operations"
+            )
+            return job_cards
+
+        for op in work_order.operations:
+            # Check if Job Card exists
+            existing = frappe.db.exists("Job Card", {
                 "work_order": work_order.name,
-                "operation": "Default Operation",
-                "for_quantity": work_order.qty,
-                "time_in_mins": 60,
-                "sequence_id": 1
+                "operation": op.operation,
+                "docstatus": ["<", 2]
             })
-            jc.insert(ignore_permissions=True)
-            job_cards.append({
-                "name": jc.name,
-                "operation": jc.operation,
-                "workstation": jc.workstation,
-                "workstation_type": jc.workstation_type,
-                "for_quantity": jc.for_quantity,
-                "time_in_mins": jc.time_in_mins,
-                "sequence_id": jc.sequence_id
-            })
-        else:
-            for op in work_order.operations:
-                # Check if Job Card exists
-                existing = frappe.db.exists("Job Card", {
-                    "work_order": work_order.name,
-                    "operation": op.operation,
-                    "docstatus": ["<", 2]
-                })
 
-                if existing:
-                    jc_doc = frappe.get_doc("Job Card", existing)
-                else:
-                    jc = frappe.get_doc({
-                        "doctype": "Job Card",
-                        "work_order": work_order.name,
-                        "operation": op.operation,
-                        "workstation": op.workstation,
-                        "workstation_type": op.workstation_type,
-                        "for_quantity": work_order.qty,
-                        "time_in_mins": op.time_in_mins or 60,
-                        "sequence_id": op.sequence_id or op.idx
-                    })
-                    jc.insert(ignore_permissions=True)
-                    jc_doc = jc
-
+            if existing:
+                jc_doc = frappe.get_doc("Job Card", existing)
                 job_cards.append({
                     "name": jc_doc.name,
                     "operation": jc_doc.operation,
                     "workstation": jc_doc.workstation,
                     "workstation_type": jc_doc.workstation_type,
                     "for_quantity": jc_doc.for_quantity,
-                    "time_in_mins": jc_doc.time_in_mins,
+                    "time_required": jc_doc.time_required,
                     "sequence_id": jc_doc.sequence_id
                 })
+            else:
+                # Job Card should already exist from Work Order submission
+                # If not, log warning but don't create - ERPNext should handle this
+                frappe.log_error(
+                    f"Job Card not found for Work Order {work_order.name}, Operation {op.operation}",
+                    "Scheduling - Missing Job Card"
+                )
 
-        frappe.db.commit()
         return job_cards
 
     def _get_eligible_machines(
