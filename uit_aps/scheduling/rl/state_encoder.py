@@ -308,7 +308,7 @@ class StateEncoder:
         # Slack feature (1 feature) - due date - (current time + remaining duration)
         slack = 0.0
         if op.get("due_date") and current_time:
-            remaining = op.get("duration_mins", 0) if status != "completed" else 0
+            remaining = int(op.get("duration_mins", 0)) if status != "completed" else 0
             finish_time = current_time + timedelta(minutes=remaining)
             slack_mins = (op["due_date"] - finish_time).total_seconds() / 60
             slack = np.clip(slack_mins / self.config.max_tardiness_mins, -1.0, 1.0)

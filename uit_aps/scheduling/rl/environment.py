@@ -557,7 +557,9 @@ class SchedulingEnv:
             new_start = op["start_time"] - timedelta(minutes=30)
             if new_start >= self.current_time:
                 op["start_time"] = new_start
-                op["end_time"] = new_start + timedelta(minutes=op["duration_mins"])
+                # Convert numpy.int64 to int for timedelta
+                duration = int(op["duration_mins"])
+                op["end_time"] = new_start + timedelta(minutes=duration)
                 return True
 
         return False
@@ -573,7 +575,9 @@ class SchedulingEnv:
             # Move 30 minutes later
             new_start = op["start_time"] + timedelta(minutes=30)
             op["start_time"] = new_start
-            op["end_time"] = new_start + timedelta(minutes=op["duration_mins"])
+            # Convert numpy.int64 to int for timedelta
+            duration = int(op["duration_mins"])
+            op["end_time"] = new_start + timedelta(minutes=duration)
             return True
 
         return False
@@ -597,9 +601,11 @@ class SchedulingEnv:
             return False
 
         # Split in half
-        op["duration_mins"] = op["duration_mins"] // 2
+        op["duration_mins"] = int(op["duration_mins"]) // 2
         if op["end_time"] and op["start_time"]:
-            op["end_time"] = op["start_time"] + timedelta(minutes=op["duration_mins"])
+            # Convert numpy.int64 to int for timedelta
+            duration = int(op["duration_mins"])
+            op["end_time"] = op["start_time"] + timedelta(minutes=duration)
 
         return True
 
@@ -669,9 +675,11 @@ class SchedulingEnv:
             for machine in self.machines:
                 if machine["id"] == machine_id:
                     machine["status"] = "breakdown"
+                    # Convert numpy.int64 to int for timedelta
+                    duration = int(disruption["duration_mins"])
                     machine["breakdown_until"] = (
                         self.current_time +
-                        timedelta(minutes=disruption["duration_mins"])
+                        timedelta(minutes=duration)
                     )
 
                     # Mark affected operation as delayed
@@ -683,28 +691,30 @@ class SchedulingEnv:
 
         elif dtype == DisruptionType.PROCESSING_DELAY:
             op_id = disruption.get("operation_id")
-            delay_mins = disruption.get("delay_mins", 30)
+            delay_mins = int(disruption.get("delay_mins", 30))
 
             for op in self.operations:
                 if op["id"] == op_id:
                     if op["end_time"]:
                         op["end_time"] += timedelta(minutes=delay_mins)
-                        op["duration_mins"] += delay_mins
+                        op["duration_mins"] = int(op["duration_mins"]) + delay_mins
                     break
 
         elif dtype == DisruptionType.RUSH_ORDER:
             # Add a high-priority pending operation
+            # Convert numpy.int64 to int for timedelta
+            duration = int(disruption["duration_mins"])
             for op in self.operations:
                 if op["status"] == "empty":
                     op.update({
                         "id": f"rush_{self.current_step}",
                         "job_id": f"rush_job_{self.current_step}",
                         "name": "Rush Order",
-                        "duration_mins": disruption["duration_mins"],
+                        "duration_mins": duration,
                         "priority": 10,
                         "status": "pending",
                         "start_time": self.current_time,
-                        "end_time": self.current_time + timedelta(minutes=disruption["duration_mins"]),
+                        "end_time": self.current_time + timedelta(minutes=duration),
                         "due_date": self.current_time + timedelta(hours=4)
                     })
                     break
@@ -789,7 +799,7 @@ class SchedulingEnv:
         # Clean up resolved disruptions
         self.state.active_disruptions = [
             d for d in self.state.active_disruptions
-            if d["time"] + timedelta(minutes=d["duration_mins"]) > self.current_time
+            if d["time"] + timedelta(minutes=int(d["duration_mins"])) > self.current_time
         ]
 
     def _calculate_reward(self, action_success: bool, disruptions: List[Dict]) -> float:

@@ -460,13 +460,15 @@ class RewardCalculator:
             return 0.0
 
         # Estimate completion time
+        # Convert numpy.int64 to int for timedelta
+        duration_mins = int(op.get("duration_mins", 60))
         if op.get("end_time"):
             expected_end = op["end_time"]
         elif op.get("start_time"):
-            duration = timedelta(minutes=op.get("duration_mins", 60))
+            duration = timedelta(minutes=duration_mins)
             expected_end = op["start_time"] + duration
         else:
-            expected_end = current_time + timedelta(minutes=op.get("duration_mins", 60))
+            expected_end = current_time + timedelta(minutes=duration_mins)
 
         return (op["due_date"] - expected_end).total_seconds() / 60
 

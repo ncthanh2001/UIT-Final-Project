@@ -171,8 +171,27 @@ def get_realtime_adjustment(
 
         # Get action details
         action_name = ActionType(action_type).name
-        target_op = operations[op_idx] if op_idx < len(operations) else {}
-        target_machine = machines[machine_idx] if machine_idx < len(machines) else {}
+
+        # Ensure indices are within valid bounds
+        # Filter to only non-empty operations
+        valid_operations = [op for op in operations if op.get("status") != "empty" and op.get("job_card")]
+        valid_machines = [m for m in machines if m.get("id")]
+
+        # Map the indices to valid items
+        if valid_operations and op_idx < len(valid_operations):
+            target_op = valid_operations[op_idx]
+        elif valid_operations:
+            # If index out of bounds, use modulo to wrap around
+            target_op = valid_operations[op_idx % len(valid_operations)]
+        else:
+            target_op = {}
+
+        if valid_machines and machine_idx < len(valid_machines):
+            target_machine = valid_machines[machine_idx]
+        elif valid_machines:
+            target_machine = valid_machines[machine_idx % len(valid_machines)]
+        else:
+            target_machine = {}
 
         # Safely get values with fallbacks
         target_op = target_op or {}
@@ -247,9 +266,19 @@ def apply_rl_adjustment(
         if action == ActionType.NO_OP:
             return {"success": True, "message": _("No action needed")}
 
+        # Validate target_operation
+        if not target_operation or target_operation.strip() == "":
+            return {
+                "success": False,
+                "message": _("No target operation specified. The RL agent may need to be retrained with more data.")
+            }
+
         # Get Job Card
         if not frappe.db.exists("Job Card", target_operation):
-            return {"success": False, "message": _("Job Card not found")}
+            return {
+                "success": False,
+                "message": _("Job Card '{0}' not found. It may have been deleted or the operation index was invalid.").format(target_operation)
+            }
 
         jc = frappe.get_doc("Job Card", target_operation)
 
@@ -278,7 +307,8 @@ def apply_rl_adjustment(
                 new_start = now_datetime()
 
             # Get duration from Work Order operation since Job Card doesn't have time_in_mins
-            duration_mins = _get_operation_duration(jc)
+            # Convert to int in case it's numpy.int64
+            duration_mins = int(_get_operation_duration(jc))
             new_end = new_start + timedelta(minutes=duration_mins)
 
             jc.expected_start_date = new_start
@@ -302,7 +332,8 @@ def apply_rl_adjustment(
             new_start = jc.expected_start_date + timedelta(minutes=30)
 
             # Get duration from Work Order operation since Job Card doesn't have time_in_mins
-            duration_mins = _get_operation_duration(jc)
+            # Convert to int in case it's numpy.int64
+            duration_mins = int(_get_operation_duration(jc))
             new_end = new_start + timedelta(minutes=duration_mins)
 
             jc.expected_start_date = new_start
