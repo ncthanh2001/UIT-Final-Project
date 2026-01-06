@@ -54,6 +54,7 @@
    "fieldname": "production_plan",
    "fieldtype": "Link",
    "label": "Production Plan",
+   "link_filters": "[[\"Production Plan\",\"status\",\"!=\",\"Completed\"]]",
    "options": "Production Plan",
    "reqd": 1
   },
@@ -272,7 +273,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-07 10:00:00.000000",
+ "modified": "2026-01-07 01:50:45.736401",
  "modified_by": "Administrator",
  "module": "UIT APS",
  "name": "APS Scheduling Run",

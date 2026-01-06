@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from "vue"
+import { ref, computed, onMounted } from "vue"
+import { useRoute } from "vue-router"
+import { createResource } from "frappe-ui"
 import {
   ChevronLeft,
   ChevronRight,
@@ -47,18 +49,28 @@ interface Job {
   progress: number
   priority: "low" | "medium" | "high"
   dueDate: number
+  startTime?: string
+  endTime?: string
+  jobCard?: string
 }
 
-const initialJobs: Job[] = [
-  { id: "1", jobCode: "SO-00023", operation: "OP-10", machine: "M01", startDay: 0, startHour: 9, durationHours: 40, status: "ontime", progress: 100, priority: "high", dueDate: 5 },
-  { id: "2", jobCode: "SO-00023", operation: "OP-20", machine: "M02", startDay: 1, startHour: 10, durationHours: 56, status: "atrisk", progress: 80, priority: "high", dueDate: 8 },
-  { id: "3", jobCode: "SO-00045", operation: "OP-10", machine: "M03", startDay: 3, startHour: 8, durationHours: 80, status: "ontime", progress: 45, priority: "medium", dueDate: 14 },
-  { id: "4", jobCode: "SO-00045", operation: "OP-20", machine: "M01", startDay: 2, startHour: 14, durationHours: 64, status: "late", progress: 60, priority: "high", dueDate: 6 },
-  { id: "5", jobCode: "SO-00067", operation: "OP-10", machine: "M04", startDay: 1, startHour: 13, durationHours: 32, status: "ontime", progress: 100, priority: "medium", dueDate: 4 },
-  { id: "6", jobCode: "SO-00067", operation: "OP-30", machine: "M02", startDay: 6, startHour: 9, durationHours: 48, status: "atrisk", progress: 10, priority: "low", dueDate: 10 },
-  { id: "7", jobCode: "SO-00089", operation: "OP-10", machine: "M05", startDay: 7, startHour: 10, durationHours: 40, status: "ontime", progress: 0, priority: "low", dueDate: 12 },
-  { id: "8", jobCode: "SO-00089", operation: "OP-20", machine: "M01", startDay: 9, startHour: 8, durationHours: 24, status: "late", progress: 0, priority: "high", dueDate: 9 },
-]
+interface Workstation {
+  id: string
+  name: string
+  status: string
+  utilization: number
+}
+
+interface PlantFloor {
+  floor: string
+  description: string
+  workstations: Workstation[]
+}
+
+const route = useRoute()
+const loading = ref(false)
+const plantFloors = ref<PlantFloor[]>([])
+const schedulingRunInfo = ref<any>(null)
 
 const HOURS_PER_DAY = 24
 const WORK_HOURS_START = 8
@@ -101,7 +113,7 @@ interface AIRecommendation {
   applied: boolean
 }
 
-const jobs = ref<Job[]>(initialJobs.map((job) => ({ ...job })))
+const jobs = ref<Job[]>([])
 const draggedJob = ref<string | null>(null)
 const dragStartX = ref(0)
 const dragStartDay = ref(0)
@@ -120,11 +132,76 @@ const viewModes: { key: ViewMode; label: string }[] = [
 ]
 
 const kpiData = ref<KPIData>({
-  makespan: 12,
-  lateJobs: 2,
-  avgUtilization: 78,
-  scheduleStability: 85,
+  makespan: 0,
+  lateJobs: 0,
+  avgUtilization: 0,
+  scheduleStability: 0,
 })
+
+// Resource de load gantt data
+const ganttResource = createResource({
+  url: "uit_aps.scheduling.api.gantt_api.get_job_cards_for_gantt",
+  params: {
+    scheduling_run: route.query.scheduling_run as string || null
+  },
+  auto: false,
+  onSuccess(data: any) {
+    console.log("Gantt data loaded:", data)
+    
+    // Convert jobs tu API sang format gantt
+    const convertedJobs = data.jobs.map((job: any) => convertJobToGanttFormat(job))
+    jobs.value = convertedJobs
+    
+    // Update KPI
+    kpiData.value = data.kpi
+    
+    // Update workstations
+    plantFloors.value = data.workstations
+    
+    // Update scheduling run info
+    schedulingRunInfo.value = data.schedulingRun
+  },
+  onError(error: any) {
+    console.error("Error loading gantt data:", error)
+  }
+})
+
+const convertJobToGanttFormat = (apiJob: any): Job => {
+  // Parse start time
+  const startTime = new Date(apiJob.startTime)
+  const startDiff = startTime.getTime() - baseStartDate.value.getTime()
+  const startDay = Math.floor(startDiff / (24 * 60 * 60 * 1000))
+  const startHour = startTime.getHours()
+  
+  // Calculate due date (mock)
+  const dueDate = startDay + Math.ceil(apiJob.durationHours / 24) + 2
+  
+  return {
+    id: apiJob.id,
+    jobCode: apiJob.jobCode,
+    operation: apiJob.operation,
+    machine: apiJob.machine,
+    startDay: Math.max(0, startDay),
+    startHour: startHour,
+    durationHours: apiJob.durationHours,
+    status: apiJob.status as RiskStatus,
+    progress: apiJob.progress,
+    priority: apiJob.priority as "low" | "medium" | "high",
+    dueDate: dueDate,
+    startTime: apiJob.startTime,
+    endTime: apiJob.endTime,
+    jobCard: apiJob.jobCard
+  }
+}
+
+const loadGanttData = () => {
+  ganttResource.update({
+    params: {
+      scheduling_run: route.query.scheduling_run as string || null
+    }
+  })
+  ganttResource.fetch()
+}
 
 const aiRecommendation: AIRecommendation = {
   event: "Rush order detected",
@@ -236,14 +313,13 @@ const handleApplyAI = () => {
 
 const handleIgnoreAI = () => {
   aiApplied.value = false
-  kpiData.value = {
-    makespan: 12,
-    lateJobs: 2,
-    avgUtilization: 78,
-    scheduleStability: 85,
-  }
-  jobs.value = initialJobs.map((job) => ({ ...job }))
+  // Reload original data
+  loadGanttData()
 }
+
+onMounted(() => {
+  loadGanttData()
+})
 
 const handleMouseDown = (event: MouseEvent, jobId: string, startDay: number, startHour: number) => {
   event.preventDefault()
@@ -332,7 +408,12 @@ const priorityLabels = {
 <template>
   <div class="flex flex-col h-full">
     <div class="px-6 py-3 border-b border-border bg-card">
-      <BackButton to="/dashboard" label="Quay lại Dashboard" />
+      <div class="flex items-center justify-between">
+        <BackButton to="/" label="Quay lai" />
+        <div v-if="schedulingRunInfo" class="text-sm text-muted-foreground">
+          Scheduling Run: <span class="font-medium text-foreground">{{ schedulingRunInfo.name }}</span>
+        </div>
+      </div>
     </div>
 
     <div class="px-6 py-3 border-b border-border bg-card">
@@ -389,9 +470,14 @@ const priorityLabels = {
 
     <div class="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
       <div class="flex items-center gap-4">
-        <h2 class="text-lg font-semibold text-foreground">Production Schedule</h2>
+        <h2 class="text-lg font-semibold text-foreground">
+          {{ schedulingRunInfo ? 'Scheduled Production' : 'Production Schedule' }}
+        </h2>
         <Badge variant="secondary" class="font-normal">
           {{ jobs.length }} Jobs
+        </Badge>
+        <Badge v-if="ganttResource.loading" variant="outline" class="animate-pulse">
+          Loading...
         </Badge>
       </div>
 
@@ -719,20 +805,30 @@ const priorityLabels = {
         <h3 class="text-sm font-semibold text-foreground">Workstations by Plant Floor</h3>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card class="border-border">
+      <div v-if="plantFloors.length === 0" class="text-center py-8 text-muted-foreground">
+        No plant floors or workstations configured
+      </div>
+      
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card v-for="(floor, floorIndex) in plantFloors" :key="floor.floor" class="border-border">
           <CardHeader class="pb-2 pt-3 px-4">
             <CardTitle class="text-xs font-semibold flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full bg-primary" />
-              Floor A - Assembly
+              <div :class="cn(
+                'w-2 h-2 rounded-full',
+                floorIndex === 0 ? 'bg-primary' : floorIndex === 1 ? 'bg-warning' : 'bg-info'
+              )" />
+              {{ floor.floor }}
             </CardTitle>
+            <p v-if="floor.description" class="text-[10px] text-muted-foreground mt-1">
+              {{ floor.description }}
+            </p>
           </CardHeader>
           <CardContent class="px-4 pb-3 space-y-2">
-            <div v-for="ws in [
-              { id: 'M01', name: 'CNC Machine 01', status: 'running', utilization: 87 },
-              { id: 'M02', name: 'CNC Machine 02', status: 'running', utilization: 72 },
-              { id: 'M03', name: 'Lathe Machine', status: 'idle', utilization: 0 },
-            ]" :key="ws.id" class="flex items-center justify-between p-2 rounded-md bg-muted/50">
+            <div v-if="floor.workstations.length === 0" class="text-xs text-muted-foreground text-center py-2">
+              No workstations
+            </div>
+            <div v-else v-for="ws in floor.workstations" :key="ws.id" 
+              class="flex items-center justify-between p-2 rounded-md bg-muted/50">
               <div class="flex items-center gap-2">
                 <Cpu class="h-3.5 w-3.5 text-muted-foreground" />
                 <div>
@@ -741,71 +837,15 @@ const priorityLabels = {
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <div
-                  :class="cn('w-1.5 h-1.5 rounded-full', ws.status === 'running' ? 'bg-success' : 'bg-muted-foreground')" />
-                <span class="text-[10px] text-muted-foreground">{{ ws.utilization }}%</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card class="border-border">
-          <CardHeader class="pb-2 pt-3 px-4">
-            <CardTitle class="text-xs font-semibold flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full bg-warning" />
-              Floor B - Fabrication
-            </CardTitle>
-          </CardHeader>
-          <CardContent class="px-4 pb-3 space-y-2">
-            <div v-for="ws in [
-              { id: 'M04', name: 'Welding Station', status: 'running', utilization: 95 },
-              { id: 'M05', name: 'Press Machine', status: 'running', utilization: 68 },
-              { id: 'M06', name: 'Cutting Table', status: 'maintenance', utilization: 0 },
-            ]" :key="ws.id" class="flex items-center justify-between p-2 rounded-md bg-muted/50">
-              <div class="flex items-center gap-2">
-                <Wrench class="h-3.5 w-3.5 text-muted-foreground" />
-                <div>
-                  <p class="text-xs font-medium text-foreground">{{ ws.id }}</p>
-                  <p class="text-[10px] text-muted-foreground">{{ ws.name }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
                 <div :class="cn(
                   'w-1.5 h-1.5 rounded-full',
-                  ws.status === 'running' ? 'bg-success' : ws.status === 'maintenance' ? 'bg-warning' : 'bg-muted-foreground',
+                  ws.status === 'Production' ? 'bg-success' : 
+                  ws.status === 'Maintenance' ? 'bg-warning' : 
+                  'bg-muted-foreground'
                 )" />
                 <span class="text-[10px] text-muted-foreground">
-                  {{ ws.status === 'maintenance' ? 'Maint.' : `${ws.utilization}%` }}
+                  {{ ws.status === 'Maintenance' ? 'Maint.' : `${Math.round(ws.utilization)}%` }}
                 </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card class="border-border">
-          <CardHeader class="pb-2 pt-3 px-4">
-            <CardTitle class="text-xs font-semibold flex items-center gap-2">
-              <div class="w-2 h-2 rounded-full bg-info" />
-              Floor C - Finishing
-            </CardTitle>
-          </CardHeader>
-          <CardContent class="px-4 pb-3 space-y-2">
-            <div v-for="ws in [
-              { id: 'M07', name: 'Paint Booth 01', status: 'running', utilization: 82 },
-              { id: 'M08', name: 'Paint Booth 02', status: 'idle', utilization: 0 },
-              { id: 'M09', name: 'QC Station', status: 'running', utilization: 55 },
-            ]" :key="ws.id" class="flex items-center justify-between p-2 rounded-md bg-muted/50">
-              <div class="flex items-center gap-2">
-                <Settings class="h-3.5 w-3.5 text-muted-foreground" />
-                <div>
-                  <p class="text-xs font-medium text-foreground">{{ ws.id }}</p>
-                  <p class="text-[10px] text-muted-foreground">{{ ws.name }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <div
-                  :class="cn('w-1.5 h-1.5 rounded-full', ws.status === 'running' ? 'bg-success' : 'bg-muted-foreground')" />
-                <span class="text-[10px] text-muted-foreground">{{ ws.utilization }}%</span>
               </div>
             </div>
           </CardContent>
@@ -815,11 +855,11 @@ const priorityLabels = {
       <div class="flex items-center gap-6 mt-4 pt-3 border-t border-border">
         <div class="flex items-center gap-2">
           <CircleDot class="h-3 w-3 text-success" />
-          <span class="text-xs text-muted-foreground">Running</span>
+          <span class="text-xs text-muted-foreground">Production</span>
         </div>
         <div class="flex items-center gap-2">
           <CircleDot class="h-3 w-3 text-muted-foreground" />
-          <span class="text-xs text-muted-foreground">Idle</span>
+          <span class="text-xs text-muted-foreground">Idle / Stopped</span>
         </div>
         <div class="flex items-center gap-2">
           <CircleDot class="h-3 w-3 text-warning" />

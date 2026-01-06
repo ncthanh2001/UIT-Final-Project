@@ -5,6 +5,21 @@ import { session } from "./data/session"
 const routes = [
 	{
 		path: "/",
+		name: "Home",
+		component: () => import("@/pages/Index.vue"),
+	},
+	{
+		path: "/gantt",
+		name: "GanttChart",
+		component: () => import("@/components/GanttChart.vue"),
+	},
+	{
+		path: "/forecast-history",
+		name: "ForecastHistory",
+		component: () => import("@/pages/ForecastHistory.vue"),
+	},
+	{
+		path: "/dashboard",
 		name: "Dashboard",
 		component: () => import("@/pages/Dashboard.vue"),
 	},
@@ -34,7 +49,7 @@ router.beforeEach(async (to, from, next) => {
 	}
 
 	if (to.name === "Login" && isLoggedIn) {
-		next({ name: "Dashboard" })
+		next({ name: "Home" })
 	} else if (to.name !== "Login" && !isLoggedIn) {
 		next({ name: "Login" })
 	} else {

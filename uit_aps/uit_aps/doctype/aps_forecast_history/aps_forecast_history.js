@@ -3,8 +3,8 @@
 
 frappe.ui.form.on("APS Forecast History", {
 	refresh(frm) {
-            frm.add_custom_button(__("Generate from Forecast"), function() {
-               frappe.msgprint(__("Generate from Forecast"));
+            frm.add_custom_button(__("View Dashboard"), function() {
+                window.open(`/frontend/dashboard?history=${frm.doc.name}`, "_blank");
             });
 	},
 });
