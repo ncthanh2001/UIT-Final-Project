@@ -22,7 +22,8 @@ def run_ortools_scheduling(
     scheduling_strategy: str = "Forward Scheduling",
     time_limit_seconds: int = 300,
     makespan_weight: float = 1.0,
-    tardiness_weight: float = 10.0
+    tardiness_weight: float = 10.0,
+    allow_overtime: bool = False
 ) -> dict:
     """
     Run OR-Tools optimal scheduling.
@@ -35,6 +36,7 @@ def run_ortools_scheduling(
         time_limit_seconds: Solver time limit
         makespan_weight: Weight for makespan objective
         tardiness_weight: Weight for tardiness objective
+        allow_overtime: Whether to allow scheduling outside working hours (default False)
 
     Returns:
         dict: {
@@ -89,15 +91,23 @@ def run_ortools_scheduling(
 
     try:
         # Configure scheduler
-        # Note: allow_overtime=True makes the scheduler more flexible
-        # and prevents infeasibility due to working hours constraints
+        # Note: allow_overtime controls whether operations can be scheduled
+        # outside of machine working hours. Set to False to enforce working hours.
+        # If allow_overtime=False and no feasible solution is found, it may be due to:
+        # - Operation duration > working slot duration
+        # - Not enough working hour slots for all operations
+        # - Workstation Working Hour not properly configured
+
+        # Convert allow_overtime from string to boolean (Frappe passes strings)
+        overtime_allowed = allow_overtime in [True, "true", "True", 1, "1"]
+
         config = SchedulingConfig(
             time_limit_seconds=cint(time_limit_seconds) or 300,
             objective_weights=ObjectiveWeights(
                 makespan_weight=flt(makespan_weight) or 1.0,
                 tardiness_weight=flt(tardiness_weight) or 10.0
             ),
-            allow_overtime=True  # Allow overtime to prevent infeasibility
+            allow_overtime=overtime_allowed
         )
 
         # Load data
