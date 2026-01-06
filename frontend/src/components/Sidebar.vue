@@ -38,9 +38,9 @@ const props = defineProps<SidebarProps>()
 
 const mainNavItems: NavItem[] = [
   { icon: Database, label: "Data Collection", href: "/data-collection" },
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: CalendarDays, label: "Gantt Chart", href: "/gantt" },
+  { icon: LayoutDashboard, label: "Forecast History", href: "/forecast-history" },
   { icon: Inbox, label: "Inbox", href: "/inbox", badge: 5 },
-  { icon: CalendarDays, label: "Gantt Chart", href: "/" },
   { icon: FolderKanban, label: "Kanban Board", href: "/kanban" },
   { icon: CheckSquare, label: "Tasks", href: "/tasks", badge: 12 },
   { icon: Clock, label: "Timeline", href: "/timeline" },
