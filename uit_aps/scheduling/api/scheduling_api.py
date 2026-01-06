@@ -89,12 +89,15 @@ def run_ortools_scheduling(
 
     try:
         # Configure scheduler
+        # Note: allow_overtime=True makes the scheduler more flexible
+        # and prevents infeasibility due to working hours constraints
         config = SchedulingConfig(
             time_limit_seconds=cint(time_limit_seconds) or 300,
             objective_weights=ObjectiveWeights(
                 makespan_weight=flt(makespan_weight) or 1.0,
                 tardiness_weight=flt(tardiness_weight) or 10.0
-            )
+            ),
+            allow_overtime=True  # Allow overtime to prevent infeasibility
         )
 
         # Load data
@@ -107,11 +110,54 @@ def run_ortools_scheduling(
         if not problem.jobs:
             raise ValueError("No jobs found to schedule")
 
+        # Validate problem data before solving
+        validation_errors = []
+
+        # Check if we have jobs
+        if not problem.jobs:
+            validation_errors.append("No jobs to schedule")
+
+        # Check if we have machines
+        if not problem.machines:
+            validation_errors.append("No machines/workstations available")
+
+        # Check each job has operations with eligible machines
+        for job in problem.jobs:
+            if not job.operations:
+                validation_errors.append(f"Job {job.id} has no operations")
+            for op in job.operations:
+                if not op.eligible_machines:
+                    validation_errors.append(f"Operation {op.id} has no eligible machines")
+
+        if validation_errors:
+            error_msg = "Scheduling validation failed:\n" + "\n".join(validation_errors)
+            frappe.log_error(error_msg, "Scheduling Validation Error")
+            raise ValueError(error_msg)
+
         # Run scheduler
         scheduler = ORToolsScheduler(config)
         scheduler.load_data(problem)
         scheduler.build_model()
         solution = scheduler.solve(cint(time_limit_seconds))
+
+        # If no feasible solution, provide diagnostic info
+        if not solution.is_feasible:
+            diag_info = []
+            diag_info.append(f"Jobs: {len(problem.jobs)}")
+            diag_info.append(f"Total operations: {sum(len(j.operations) for j in problem.jobs)}")
+            diag_info.append(f"Machines: {len(problem.machines)}")
+            diag_info.append(f"Solver status: {solution.status.value}")
+            diag_info.append(f"Solve time: {solution.solve_time_secs:.2f}s")
+
+            # Check for potential issues
+            for job in problem.jobs:
+                if job.due_date < now_datetime():
+                    diag_info.append(f"WARNING: Job {job.id} has past due date: {job.due_date}")
+
+            frappe.log_error(
+                "No feasible solution found.\n" + "\n".join(diag_info),
+                "Scheduling - Infeasible"
+            )
 
         # Export results
         exporter = SchedulingExporter(scheduling_run=scheduling_run_name)

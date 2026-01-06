@@ -217,30 +217,42 @@ class ORToolsScheduler:
         must start and end within one of the working hour slots.
 
         Working hours are loaded from ERPNext Workstation Working Hour child table.
+
+        NOTE: This constraint can cause infeasibility if:
+        - Operation duration > working slot duration
+        - Not enough slots available for all operations
+        We make it a soft constraint by only applying if the operation fits.
         """
         if self.config.allow_overtime:
             # Skip working hours constraints if overtime is allowed
             return
 
-        # Build mapping of operation -> assigned machine
-        op_to_machine = {}
+        # Build mapping of operation -> (assigned machine, duration)
+        op_info = {}
         for job in self.problem.jobs:
             for op in job.operations:
                 if op.eligible_machines:
                     # Currently using first eligible machine (TODO: optimize machine selection)
-                    op_to_machine[op.id] = op.eligible_machines[0]
+                    op_info[op.id] = {
+                        "machine_id": op.eligible_machines[0],
+                        "duration": op.duration_mins
+                    }
 
         # Get unique days in the scheduling horizon
         horizon_days = self.config.horizon_days or 30
 
-        for op_id, machine_id in op_to_machine.items():
+        for op_id, info in op_info.items():
+            machine_id = info["machine_id"]
+            op_duration = info["duration"]
+
             machine = self.problem.get_machine_by_id(machine_id)
             if not machine or not machine.working_hours:
+                # No working hours defined - allow any time
                 continue
 
             # Build allowed time windows across the horizon
             # Each working hour slot is converted to minutes from schedule start
-            allowed_starts = []
+            allowed_slots = []
 
             for day_offset in range(horizon_days):
                 current_date = self._schedule_start + timedelta(days=day_offset)
@@ -259,16 +271,27 @@ class ORToolsScheduler:
 
                     # Only include valid time windows (positive and within horizon)
                     if start_mins >= 0 and start_mins < self._horizon_minutes:
-                        allowed_starts.append((max(0, start_mins), min(self._horizon_minutes, end_mins)))
+                        slot_duration = end_mins - start_mins
+                        # Only include slots that can fit this operation
+                        if slot_duration >= op_duration:
+                            allowed_slots.append((max(0, start_mins), min(self._horizon_minutes, end_mins)))
 
-            # If working hours are defined, add constraint that operation must fit in one slot
-            if allowed_starts and op_id in self._operation_starts:
+            # If no slots can fit this operation, skip constraint (allow overtime)
+            if not allowed_slots:
+                frappe.log_error(
+                    f"Operation {op_id} (duration={op_duration}min) cannot fit in any working hour slot. Allowing overtime.",
+                    "Scheduling - Working Hours"
+                )
+                continue
+
+            # If working hours are defined and operation can fit, add constraint
+            if op_id in self._operation_starts:
                 start_var = self._operation_starts[op_id]
                 end_var = self._operation_ends[op_id]
 
                 # Create boolean variables for each possible slot
                 slot_bools = []
-                for i, (slot_start, slot_end) in enumerate(allowed_starts):
+                for i, (slot_start, slot_end) in enumerate(allowed_slots):
                     slot_bool = self.model.NewBoolVar(f"slot_{op_id}_{i}")
                     slot_bools.append(slot_bool)
 
