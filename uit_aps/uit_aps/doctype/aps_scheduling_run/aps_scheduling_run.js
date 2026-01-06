@@ -28,6 +28,55 @@ frappe.ui.form.on("APS Scheduling Run", {
     scheduling_tier(frm) {
         // Update UI based on selected tier
         frm.update_tier_visibility();
+    },
+
+    llm_analysis_button(frm) {
+        // Handle "Get AI Analysis" button click
+        if (frm.doc.run_status !== "Completed") {
+            frappe.msgprint({
+                title: __("Cannot Analyze"),
+                message: __("Please run scheduling first. Analysis is only available for completed scheduling runs."),
+                indicator: "orange"
+            });
+            return;
+        }
+
+        frappe.call({
+            method: "uit_aps.scheduling.llm.llm_api.get_scheduling_advice",
+            args: {
+                scheduling_run: frm.doc.name,
+                language: frm.doc.llm_analysis_language || "vi"
+            },
+            freeze: true,
+            freeze_message: __("Getting AI analysis from OpenAI..."),
+            callback: function(r) {
+                if (r.message && r.message.success) {
+                    // Update fields with the analysis result
+                    frm.set_value("llm_analysis_content", r.message.raw_response);
+                    frm.set_value("llm_analysis_date", frappe.datetime.now_datetime());
+                    frm.set_value("llm_analysis_model", r.message.model || "gpt-4o-mini");
+                    frm.save();
+
+                    frappe.show_alert({
+                        message: __("AI analysis completed and saved!"),
+                        indicator: "green"
+                    });
+                } else {
+                    frappe.msgprint({
+                        title: __("Analysis Failed"),
+                        message: r.message ? r.message.error : __("Unknown error. Please check OpenAI API key in APS Chatgpt Settings."),
+                        indicator: "red"
+                    });
+                }
+            },
+            error: function() {
+                frappe.msgprint({
+                    title: __("Error"),
+                    message: __("Failed to connect to LLM service. Please check your OpenAI API key configuration."),
+                    indicator: "red"
+                });
+            }
+        });
     }
 });
 

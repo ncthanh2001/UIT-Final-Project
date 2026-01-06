@@ -33,6 +33,13 @@
   "total_tardiness_minutes",
   "column_break_metrics",
   "machine_utilization",
+  "section_llm_analysis",
+  "llm_analysis_button",
+  "llm_analysis_language",
+  "column_break_llm",
+  "llm_analysis_date",
+  "llm_analysis_model",
+  "llm_analysis_content",
   "section_meta",
   "notes"
  ],
@@ -211,6 +218,45 @@
    "fieldname": "machine_utilization",
    "fieldtype": "Float",
    "label": "Avg Machine Utilization (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_llm_analysis",
+   "fieldtype": "Section Break",
+   "label": "LLM Analysis (AI Advisor)"
+  },
+  {
+   "fieldname": "llm_analysis_button",
+   "fieldtype": "Button",
+   "label": "Get AI Analysis"
+  },
+  {
+   "default": "vi",
+   "fieldname": "llm_analysis_language",
+   "fieldtype": "Select",
+   "label": "Language",
+   "options": "vi\nen"
+  },
+  {
+   "fieldname": "column_break_llm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "llm_analysis_date",
+   "fieldtype": "Datetime",
+   "label": "Analysis Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "llm_analysis_model",
+   "fieldtype": "Data",
+   "label": "Model Used",
+   "read_only": 1
+  },
+  {
+   "fieldname": "llm_analysis_content",
+   "fieldtype": "Text Editor",
+   "label": "AI Analysis & Recommendations",
    "read_only": 1
   },
   {
