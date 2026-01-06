@@ -591,27 +591,42 @@ def _load_from_scheduling_run(scheduling_run: str) -> tuple:
     if not frappe.db.exists("APS Scheduling Run", scheduling_run):
         frappe.throw(_("Scheduling run {0} not found").format(scheduling_run))
 
-    # Load scheduling results
+    # Load scheduling results with correct field names from APS Scheduling Result doctype
+    # Fields: job_card, workstation, operation, planned_start_time, planned_end_time, is_late
     results = frappe.get_all(
         "APS Scheduling Result",
         filters={"scheduling_run": scheduling_run},
         fields=[
-            "name", "job_card", "work_order", "workstation",
-            "scheduled_start", "scheduled_end", "duration_minutes",
-            "status", "sequence"
+            "name", "job_card", "workstation", "operation",
+            "planned_start_time", "planned_end_time", "is_late"
         ]
     )
 
-    for r in results:
+    for idx, r in enumerate(results):
+        # Calculate duration from start and end times
+        duration = 0
+        start_mins = 0
+        end_mins = 0
+
+        if r.planned_start_time and r.planned_end_time:
+            duration = int((r.planned_end_time - r.planned_start_time).total_seconds() / 60)
+            start_mins = r.planned_start_time.timestamp() / 60
+            end_mins = r.planned_end_time.timestamp() / 60
+
+        # Get work_order from job_card if available
+        work_order = None
+        if r.job_card:
+            work_order = frappe.db.get_value("Job Card", r.job_card, "work_order")
+
         schedule.append({
             "operation_id": r.job_card,
-            "job_id": r.work_order,
+            "job_id": work_order or r.job_card,  # Use work_order if available, else job_card
             "machine_id": r.workstation,
-            "start_time": r.scheduled_start.timestamp() / 60 if r.scheduled_start else 0,
-            "end_time": r.scheduled_end.timestamp() / 60 if r.scheduled_end else 0,
-            "duration": r.duration_minutes or 0,
-            "status": r.status or "pending",
-            "sequence": r.sequence or 0
+            "start_time": start_mins,
+            "end_time": end_mins,
+            "duration": duration,
+            "status": "late" if r.is_late else "on_time",
+            "sequence": idx  # Use index as sequence
         })
 
     # Load unique workstations

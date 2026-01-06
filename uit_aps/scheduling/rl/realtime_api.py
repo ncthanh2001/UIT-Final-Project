@@ -53,18 +53,20 @@ def _get_operation_duration(job_card) -> int:
     return 60
 
 
-def get_rl_agent(agent_type: str = "ppo", model_path: str = None):
+def get_rl_agent(agent_type: str = "ppo", model_path: str = None, obs_dim: int = None):
     """
     Get or load RL agent from cache.
 
     Args:
         agent_type: "ppo" or "sac"
         model_path: Path to saved model
+        obs_dim: Observation dimension (overrides saved config if provided)
 
     Returns:
         Loaded agent
     """
-    cache_key = f"{agent_type}_{model_path or 'default'}"
+    # Include obs_dim in cache key to handle different dimensions
+    cache_key = f"{agent_type}_{model_path or 'default'}_{obs_dim or 'auto'}"
 
     if cache_key not in _agent_cache:
         try:
@@ -85,11 +87,12 @@ def get_rl_agent(agent_type: str = "ppo", model_path: str = None):
             if agent_type.lower() == "ppo":
                 from uit_aps.scheduling.rl.agents.ppo import PPOAgent, PPOConfig
 
-                # Use saved config dimensions if available
-                if saved_config:
-                    obs_dim = saved_config.get("obs_dim", 3536)
-                    action_dim = saved_config.get("action_dim", 7)
-                    # Reconstruct config from saved values
+                # Priority: 1) passed obs_dim, 2) saved config, 3) default
+                if obs_dim:
+                    final_obs_dim = obs_dim
+                    config = PPOConfig()
+                elif saved_config:
+                    final_obs_dim = saved_config.get("obs_dim", 3536)
                     config_data = saved_config.get("config", {})
                     config = PPOConfig(
                         hidden_sizes=config_data.get("hidden_sizes", [256, 256]),
@@ -99,16 +102,18 @@ def get_rl_agent(agent_type: str = "ppo", model_path: str = None):
                 else:
                     config = PPOConfig()
                     # Default dimensions: max_operations * 32 + max_machines * 16 + 16
-                    obs_dim = config.max_operations * 32 + config.max_machines * 16 + 16
+                    final_obs_dim = config.max_operations * 32 + config.max_machines * 16 + 16
 
-                agent = PPOAgent(obs_dim, 7, config)
+                agent = PPOAgent(final_obs_dim, 7, config)
             else:
                 from uit_aps.scheduling.rl.agents.sac import SACAgent, SACConfig
 
-                # Use saved config dimensions if available
-                if saved_config:
-                    obs_dim = saved_config.get("obs_dim", 3536)
-                    action_dim = saved_config.get("action_dim", 7)
+                # Priority: 1) passed obs_dim, 2) saved config, 3) default
+                if obs_dim:
+                    final_obs_dim = obs_dim
+                    config = SACConfig()
+                elif saved_config:
+                    final_obs_dim = saved_config.get("obs_dim", 3536)
                     config_data = saved_config.get("config", {})
                     config = SACConfig(
                         hidden_sizes=config_data.get("hidden_sizes", [256, 256]),
@@ -117,12 +122,13 @@ def get_rl_agent(agent_type: str = "ppo", model_path: str = None):
                     )
                 else:
                     config = SACConfig()
-                    obs_dim = config.max_operations * 32 + config.max_machines * 16 + 16
+                    final_obs_dim = config.max_operations * 32 + config.max_machines * 16 + 16
 
-                agent = SACAgent(obs_dim, 7, config)
+                agent = SACAgent(final_obs_dim, 7, config)
 
-            # Load saved model if available
-            if model_path and os.path.exists(model_path):
+            # Only try to load saved model if obs_dim was NOT explicitly passed
+            # (explicit obs_dim means we want a fresh agent with that dimension)
+            if model_path and os.path.exists(model_path) and not obs_dim:
                 try:
                     agent.load(model_path)
                     agent.eval()
@@ -199,7 +205,8 @@ def get_realtime_adjustment(
         operations = _convert_results_to_operations(results)
 
         # Create state encoder
-        encoder = StateEncoder(EncoderConfig())
+        encoder_config = EncoderConfig()
+        encoder = StateEncoder(encoder_config)
         encoder.set_reference_time(now_datetime())
 
         # Encode state
@@ -210,9 +217,13 @@ def get_realtime_adjustment(
             disruptions=[]
         )
 
-        # Get agent recommendation
+        # Calculate actual observation dimension from the encoded state
+        # This ensures the agent matches the state dimensions
+        actual_obs_dim = len(state) if hasattr(state, '__len__') else state.shape[0]
+
+        # Get agent recommendation with correct dimensions
         model_path = _get_model_path(agent_type)
-        agent = get_rl_agent(agent_type, model_path)
+        agent = get_rl_agent(agent_type, model_path, obs_dim=actual_obs_dim)
 
         action, info = agent.select_action(state, deterministic=True)
 
