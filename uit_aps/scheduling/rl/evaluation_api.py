@@ -14,6 +14,35 @@ Provides REST API for:
 import frappe
 from frappe import _
 from typing import Dict, List, Optional, Any
+import numpy as np
+
+
+def convert_numpy_types(obj):
+    """
+    Recursively convert numpy types to native Python types for JSON serialization.
+
+    Args:
+        obj: Object to convert (can be dict, list, or scalar)
+
+    Returns:
+        Object with all numpy types converted to native Python types
+    """
+    if isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    elif isinstance(obj, tuple):
+        return tuple(convert_numpy_types(item) for item in obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    else:
+        return obj
 
 
 @frappe.whitelist()
@@ -91,6 +120,9 @@ def evaluate_agent(
             config=eval_config
         )
 
+        # Convert numpy types to native Python types for JSON serialization
+        analysis = convert_numpy_types(analysis)
+
         return {
             "success": True,
             "scheduling_run": scheduling_run,
@@ -159,13 +191,16 @@ def get_heuristic_schedule(
             if op.get("due_date")
         )
 
+        # Convert numpy types to native Python types for JSON serialization
+        scheduled_ops = convert_numpy_types(scheduled_ops)
+
         return {
             "success": True,
             "heuristic": heuristic,
             "schedule": scheduled_ops,
             "metrics": {
-                "makespan": makespan,
-                "total_tardiness": total_tardiness,
+                "makespan": float(makespan) if makespan else 0,
+                "total_tardiness": float(total_tardiness) if total_tardiness else 0,
                 "num_operations": len(scheduled_ops)
             }
         }
@@ -385,6 +420,9 @@ def get_monitoring_summary(last_n: int = 100) -> Dict:
 
         summary = monitor.get_summary(int(last_n))
 
+        # Convert numpy types to native Python types for JSON serialization
+        summary = convert_numpy_types(summary)
+
         return {
             "success": True,
             "summary": summary
@@ -462,18 +500,23 @@ def compare_with_ortools(scheduling_run: str) -> Dict:
 
         # Calculate comparison
         comparison = {
-            "makespan_improvement": (
+            "makespan_improvement": float(
                 (ortools_metrics["makespan_minutes"] - rl_metrics["makespan_minutes"])
                 / max(ortools_metrics["makespan_minutes"], 1) * 100
             ),
-            "tardiness_improvement": (
+            "tardiness_improvement": float(
                 (ortools_metrics["total_tardiness_minutes"] - rl_metrics["total_tardiness_minutes"])
                 / max(ortools_metrics["total_tardiness_minutes"], 1) * 100
             ),
-            "speed_improvement": (
+            "speed_improvement": float(
                 ortools_metrics["solve_time_seconds"] * 1000 / max(rl_metrics["inference_time_ms"], 1)
             )
         }
+
+        # Convert numpy types to native Python types for JSON serialization
+        ortools_metrics = convert_numpy_types(ortools_metrics)
+        rl_metrics = convert_numpy_types(rl_metrics)
+        comparison = convert_numpy_types(comparison)
 
         return {
             "success": True,
