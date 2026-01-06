@@ -68,22 +68,71 @@ def get_rl_agent(agent_type: str = "ppo", model_path: str = None):
 
     if cache_key not in _agent_cache:
         try:
+            # Check if we have a saved model with config
+            saved_config = None
+            config_file = None
+
+            if model_path and os.path.exists(model_path):
+                if agent_type.lower() == "ppo":
+                    config_file = os.path.join(model_path, "ppo_config.json")
+                else:
+                    config_file = os.path.join(model_path, "sac_config.json")
+
+                if os.path.exists(config_file):
+                    with open(config_file, "r") as f:
+                        saved_config = json.load(f)
+
             if agent_type.lower() == "ppo":
                 from uit_aps.scheduling.rl.agents.ppo import PPOAgent, PPOConfig
-                config = PPOConfig()
-                # Determine observation dimension from environment
-                obs_dim = 100 * 32 + 20 * 16 + 16  # Default dimensions
+
+                # Use saved config dimensions if available
+                if saved_config:
+                    obs_dim = saved_config.get("obs_dim", 3536)
+                    action_dim = saved_config.get("action_dim", 7)
+                    # Reconstruct config from saved values
+                    config_data = saved_config.get("config", {})
+                    config = PPOConfig(
+                        hidden_sizes=config_data.get("hidden_sizes", [256, 256]),
+                        max_operations=config_data.get("max_operations", 100),
+                        max_machines=config_data.get("max_machines", 20)
+                    )
+                else:
+                    config = PPOConfig()
+                    # Default dimensions: max_operations * 32 + max_machines * 16 + 16
+                    obs_dim = config.max_operations * 32 + config.max_machines * 16 + 16
+
                 agent = PPOAgent(obs_dim, 7, config)
             else:
                 from uit_aps.scheduling.rl.agents.sac import SACAgent, SACConfig
-                config = SACConfig()
-                obs_dim = 100 * 32 + 20 * 16 + 16
+
+                # Use saved config dimensions if available
+                if saved_config:
+                    obs_dim = saved_config.get("obs_dim", 3536)
+                    action_dim = saved_config.get("action_dim", 7)
+                    config_data = saved_config.get("config", {})
+                    config = SACConfig(
+                        hidden_sizes=config_data.get("hidden_sizes", [256, 256]),
+                        max_operations=config_data.get("max_operations", 100),
+                        max_machines=config_data.get("max_machines", 20)
+                    )
+                else:
+                    config = SACConfig()
+                    obs_dim = config.max_operations * 32 + config.max_machines * 16 + 16
+
                 agent = SACAgent(obs_dim, 7, config)
 
             # Load saved model if available
             if model_path and os.path.exists(model_path):
-                agent.load(model_path)
-                agent.eval()
+                try:
+                    agent.load(model_path)
+                    agent.eval()
+                except Exception as load_error:
+                    # If loading fails (dimension mismatch, etc.), log and continue with fresh agent
+                    frappe.log_error(
+                        f"Failed to load saved model from {model_path}: {str(load_error)}. Using fresh agent.",
+                        "RL Model Load Warning"
+                    )
+                    # Don't throw, just use the untrained agent
 
             _agent_cache[cache_key] = agent
 

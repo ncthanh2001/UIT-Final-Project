@@ -154,12 +154,16 @@ class SACAgent(BaseAgent):
     def _build_actor(self) -> "nn.Module":
         """Build actor network."""
         nn = self.nn
+        torch = self.torch  # Capture torch reference for use in inner class
         config = self.config
         hidden_sizes = config.hidden_sizes
 
         class Actor(nn.Module):
-            def __init__(self, obs_dim, hidden_sizes, num_actions, max_ops, max_machines):
+            def __init__(self, obs_dim, hidden_sizes, num_actions, max_ops, max_machines, torch_module):
                 super().__init__()
+
+                # Store torch reference for use in get_action
+                self._torch = torch_module
 
                 # Shared feature extractor
                 layers = []
@@ -197,14 +201,14 @@ class SACAgent(BaseAgent):
                     operation = operation_probs.argmax(dim=-1)
                     machine = machine_probs.argmax(dim=-1)
                 else:
-                    action_type = torch.multinomial(action_type_probs, 1).squeeze(-1)
-                    operation = torch.multinomial(operation_probs, 1).squeeze(-1)
-                    machine = torch.multinomial(machine_probs, 1).squeeze(-1)
+                    action_type = self._torch.multinomial(action_type_probs, 1).squeeze(-1)
+                    operation = self._torch.multinomial(operation_probs, 1).squeeze(-1)
+                    machine = self._torch.multinomial(machine_probs, 1).squeeze(-1)
 
                 # Calculate log probabilities
-                log_prob_type = torch.log(action_type_probs.gather(-1, action_type.unsqueeze(-1)) + 1e-8)
-                log_prob_op = torch.log(operation_probs.gather(-1, operation.unsqueeze(-1)) + 1e-8)
-                log_prob_machine = torch.log(machine_probs.gather(-1, machine.unsqueeze(-1)) + 1e-8)
+                log_prob_type = self._torch.log(action_type_probs.gather(-1, action_type.unsqueeze(-1)) + 1e-8)
+                log_prob_op = self._torch.log(operation_probs.gather(-1, operation.unsqueeze(-1)) + 1e-8)
+                log_prob_machine = self._torch.log(machine_probs.gather(-1, machine.unsqueeze(-1)) + 1e-8)
 
                 log_prob = log_prob_type + log_prob_op + log_prob_machine
 
@@ -215,7 +219,8 @@ class SACAgent(BaseAgent):
             hidden_sizes,
             config.num_action_types,
             config.max_operations,
-            config.max_machines
+            config.max_machines,
+            torch  # Pass torch module to Actor
         )
 
     def _build_critic(self) -> "nn.Module":
