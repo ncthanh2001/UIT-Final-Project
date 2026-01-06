@@ -414,15 +414,30 @@ def apply_rl_adjustment(
             }
 
         elif action == ActionType.PRIORITIZE_JOB:
-            # Increase priority in Work Order
-            if jc.work_order:
-                wo = frappe.get_doc("Work Order", jc.work_order)
-                current_priority = cint(wo.get("priority") or 1)
-                wo.db_set("priority", min(10, current_priority + 1))
+            # Prioritize by moving the job earlier in schedule
+            # Since Work Order doesn't have a priority field, we reschedule earlier
+            new_start = jc.expected_start_date - timedelta(minutes=60)
+            if new_start < now_datetime():
+                new_start = now_datetime()
+
+            duration_mins = int(_get_operation_duration(jc))
+            new_end = new_start + timedelta(minutes=duration_mins)
+
+            jc.expected_start_date = new_start
+            jc.expected_end_date = new_end
+            jc.flags.ignore_validate_update_after_submit = True
+            jc.save(ignore_permissions=True)
+
+            _update_scheduling_result(scheduling_run, target_operation, {
+                "planned_start_time": new_start,
+                "planned_end_time": new_end
+            })
 
             return {
                 "success": True,
-                "message": _("Job priority increased")
+                "message": _("Job prioritized by moving earlier in schedule"),
+                "new_start": new_start.isoformat(),
+                "new_end": new_end.isoformat()
             }
 
         else:

@@ -562,20 +562,22 @@ def load_scheduling_data(scheduling_run: str) -> Optional[Dict]:
                 "job_id": jc.work_order,
                 "operation_name": r.operation or jc.operation,
                 "machine_id": r.workstation,
-                "start_time": r.planned_start_time.timestamp() if r.planned_start_time else 0,
-                "end_time": r.planned_end_time.timestamp() if r.planned_end_time else 0,
+                "start_time": r.planned_start_time,  # Keep as datetime for environment
+                "end_time": r.planned_end_time,  # Keep as datetime for environment
                 "duration_mins": duration_mins,
-                "due_date": jc.expected_end_date.timestamp() if jc.expected_end_date else None,
+                "due_date": jc.expected_end_date,  # Keep as datetime for environment
                 "priority": 1,
                 "is_late": r.is_late
             })
 
         # Get machines
+        # Environment expects "id" key, but also include "machine_id" for compatibility
         loader = ERPNextDataLoader()
         machine_objs = loader._load_workstations()
         machines = [
             {
-                "machine_id": m.id,
+                "id": m.id,  # Environment uses "id"
+                "machine_id": m.id,  # Also include for compatibility with other code
                 "name": m.name,
                 "machine_type": m.machine_type,
                 "capacity": m.capacity,

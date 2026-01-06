@@ -402,7 +402,8 @@ class ScenarioEvaluator:
             valid_actions = self.env.get_valid_actions()
 
             # Default action: NO_OP (heuristic already scheduled)
-            action = np.array([0, 0, 0, 0])
+            # Environment expects tuple (action_type, operation_idx, machine_idx)
+            action = (0, 0, 0)
 
             obs, reward, terminated, truncated, step_info = self.env.step(action)
             total_reward += reward

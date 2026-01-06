@@ -300,3 +300,9 @@ add_to_apps_screen = [
 # }
 
 website_route_rules = [{'from_route': '/frontend/<path:app_path>', 'to_route': 'frontend'},]
+
+# Translation / Localization
+# --------------------------
+# Make translations available for this app
+# Translations are stored in uit_aps/translations/{lang}.csv
+# To import translations: bench --site {site} import-translations uit_aps/translations/vi.csv
