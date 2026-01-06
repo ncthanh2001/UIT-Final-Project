@@ -171,18 +171,27 @@ def get_realtime_adjustment(
 
         # Get action details
         action_name = ActionType(action_type).name
-        target_op = operations[op_idx] if op_idx < len(operations) else None
-        target_machine = machines[machine_idx] if machine_idx < len(machines) else None
+        target_op = operations[op_idx] if op_idx < len(operations) else {}
+        target_machine = machines[machine_idx] if machine_idx < len(machines) else {}
+
+        # Safely get values with fallbacks
+        target_op = target_op or {}
+        target_machine = target_machine or {}
+        info = info or {}
+
+        # Get confidence from action probs
+        action_probs = info.get("action_type_probs", [0])
+        confidence = float(max(action_probs)) if len(action_probs) > 0 else 0.0
 
         # Build recommendation
         recommendation = {
             "action_type": action_name,
             "action_type_id": action_type,
-            "target_operation": target_op.get("job_card", "") if target_op else "",
-            "target_operation_name": target_op.get("name", "") if target_op else "",
-            "target_machine": target_machine.get("id", "") if target_machine else "",
-            "target_machine_name": target_machine.get("name", "") if target_machine else "",
-            "confidence": float(max(info.get("action_type_probs", [0]))),
+            "target_operation": target_op.get("job_card", "") if isinstance(target_op, dict) else "",
+            "target_operation_name": target_op.get("name", "") if isinstance(target_op, dict) else "",
+            "target_machine": target_machine.get("id", "") if isinstance(target_machine, dict) else "",
+            "target_machine_name": target_machine.get("name", "") if isinstance(target_machine, dict) else "",
+            "confidence": confidence,
             "value_estimate": info.get("value", 0.0),
             "reason": _get_action_reason(action_type, target_op, target_machine)
         }
@@ -588,9 +597,15 @@ def _get_action_reason(action_type: int, target_op: Dict, target_machine: Dict) 
     from uit_aps.scheduling.rl.environment import ActionType
 
     action = ActionType(action_type)
+
+    # Safely get machine name
+    machine_name = "another machine"
+    if target_machine and isinstance(target_machine, dict):
+        machine_name = target_machine.get('name', 'another machine')
+
     reasons = {
         ActionType.NO_OP: "No adjustment needed at this time",
-        ActionType.REASSIGN_MACHINE: f"Reassign to {target_machine.get('name', 'another machine')} for better load balancing",
+        ActionType.REASSIGN_MACHINE: f"Reassign to {machine_name} for better load balancing",
         ActionType.RESCHEDULE_EARLIER: "Move earlier to reduce risk of delay",
         ActionType.RESCHEDULE_LATER: "Postpone to allow priority work to complete",
         ActionType.PRIORITIZE_JOB: "Increase priority to ensure timely completion",
@@ -606,20 +621,32 @@ def _get_alternative_actions(info: Dict, operations: List[Dict], machines: List[
     from uit_aps.scheduling.rl.environment import ActionType
 
     alternatives = []
+
+    # Safely get probs from info
+    if not info or not isinstance(info, dict):
+        return alternatives
+
     probs = info.get("action_type_probs", [])
 
     if len(probs) > 0:
         # Get top 3 action types (excluding the selected one)
         sorted_indices = sorted(range(len(probs)), key=lambda i: probs[i], reverse=True)
 
+        # Safely get first operation and machine for reason generation
+        first_op = operations[0] if operations and len(operations) > 0 else {}
+        first_machine = machines[0] if machines and len(machines) > 0 else {}
+
         for idx in sorted_indices[1:4]:  # Skip first (already selected)
-            if probs[idx] > 0.1:  # Only include if probability > 10%
-                alternatives.append({
-                    "action_type": ActionType(idx).name,
-                    "action_type_id": idx,
-                    "confidence": float(probs[idx]),
-                    "reason": _get_action_reason(idx, operations[0] if operations else {}, machines[0] if machines else {})
-                })
+            if idx < len(probs) and probs[idx] > 0.1:  # Only include if probability > 10%
+                try:
+                    alternatives.append({
+                        "action_type": ActionType(idx).name,
+                        "action_type_id": idx,
+                        "confidence": float(probs[idx]),
+                        "reason": _get_action_reason(idx, first_op, first_machine)
+                    })
+                except (ValueError, KeyError):
+                    pass  # Skip invalid action types
 
     return alternatives
 

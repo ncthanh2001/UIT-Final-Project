@@ -206,11 +206,12 @@ class RLTrainer:
 
             # Store transition
             if hasattr(self.agent, "store_transition"):
-                if hasattr(self.agent.buffer, "push"):
-                    # SAC-style buffer
+                # Check agent type to use correct signature
+                if self.config.agent_type.lower() == "sac":
+                    # SAC signature: (state, action, reward, next_state, done)
                     self.agent.store_transition(obs, action, reward, next_obs, done)
                 else:
-                    # PPO-style buffer
+                    # PPO signature: (state, action, reward, value, log_prob, done)
                     self.agent.store_transition(
                         obs, action, reward,
                         action_info.get("value", 0.0),

@@ -362,6 +362,8 @@ def encode_schedule_graph(
     config = EncoderConfig()
     encoder = SchedulingGraphEncoder(config)
 
+    # Import torch here after check_gnn_available() has verified it's installed
+    import torch
     with torch.no_grad():
         embedding = encoder.encode_graph(graph)
 
@@ -416,6 +418,8 @@ def get_operation_embeddings(
     config = EncoderConfig()
     encoder = SchedulingGraphEncoder(config)
 
+    # Import torch here after check_gnn_available() has verified it's installed
+    import torch
     with torch.no_grad():
         embeddings = encoder.get_node_embeddings(graph)
 
@@ -516,6 +520,8 @@ def train_gnn_model(
     model_path = os.path.join(model_dir, f"{model_type}_model.pt")
 
     try:
+        # Import torch here after check_gnn_available() has verified it's installed
+        import torch
         torch.save(predictor.state_dict(), model_path)
     except Exception as e:
         frappe.log_error(str(e), "Failed to save GNN model")
