@@ -440,6 +440,140 @@ def apply_rl_adjustment(
                 "new_end": new_end.isoformat()
             }
 
+        elif action == ActionType.SPLIT_BATCH:
+            # Split batch: For Job Cards with qty > 1, create additional Job Cards
+            # by adjusting the quantity and extending the schedule
+            original_qty = flt(jc.for_quantity) or 1
+
+            if original_qty <= 1:
+                return {
+                    "success": True,
+                    "message": _("Cannot split batch: Quantity is already 1 or less. No action taken."),
+                    "original_qty": original_qty
+                }
+
+            # Split into 2 batches (50% each)
+            first_batch_qty = int(original_qty / 2)
+            second_batch_qty = int(original_qty - first_batch_qty)
+
+            # Update original Job Card with first batch quantity
+            duration_mins = int(_get_operation_duration(jc))
+
+            # Recalculate duration proportionally for the first batch
+            first_batch_duration = int(duration_mins * first_batch_qty / original_qty)
+            second_batch_duration = duration_mins - first_batch_duration
+
+            # Update original Job Card
+            jc.for_quantity = first_batch_qty
+            new_end = jc.expected_start_date + timedelta(minutes=first_batch_duration)
+            jc.expected_end_date = new_end
+            jc.flags.ignore_validate_update_after_submit = True
+            jc.save(ignore_permissions=True)
+
+            # Update scheduling result for original
+            _update_scheduling_result(scheduling_run, target_operation, {
+                "planned_end_time": new_end
+            })
+
+            # Create second Job Card for the remaining batch
+            # Note: This creates a new Job Card document
+            second_start = new_end + timedelta(minutes=10)  # 10 min gap
+            second_end = second_start + timedelta(minutes=second_batch_duration)
+
+            try:
+                new_jc = frappe.copy_doc(jc)
+                new_jc.for_quantity = second_batch_qty
+                new_jc.expected_start_date = second_start
+                new_jc.expected_end_date = second_end
+                new_jc.docstatus = 0  # Draft
+                new_jc.status = "Open"
+                new_jc.insert(ignore_permissions=True)
+
+                # Create scheduling result for new Job Card
+                frappe.get_doc({
+                    "doctype": "APS Scheduling Result",
+                    "scheduling_run": scheduling_run,
+                    "job_card": new_jc.name,
+                    "work_order": new_jc.work_order,
+                    "operation": new_jc.operation,
+                    "workstation": new_jc.workstation,
+                    "planned_start_time": second_start,
+                    "planned_end_time": second_end,
+                    "is_late": 0
+                }).insert(ignore_permissions=True)
+
+                return {
+                    "success": True,
+                    "message": _("Batch split into 2 parts: {0} and {1} units").format(first_batch_qty, second_batch_qty),
+                    "original_job_card": target_operation,
+                    "new_job_card": new_jc.name,
+                    "first_batch_qty": first_batch_qty,
+                    "second_batch_qty": second_batch_qty
+                }
+
+            except Exception as split_error:
+                frappe.log_error(str(split_error), "Split Batch Error")
+                return {
+                    "success": True,
+                    "message": _("First batch updated. Could not create second batch Job Card: {0}").format(str(split_error)),
+                    "first_batch_qty": first_batch_qty,
+                    "warning": str(split_error)
+                }
+
+        elif action == ActionType.MERGE_OPERATIONS:
+            # Merge operations: Find similar operations on the same machine
+            # and combine their scheduling windows
+            # This is more of an advisory action - we extend the current operation's window
+
+            # Find other operations on the same workstation that could be merged
+            similar_ops = frappe.get_all(
+                "APS Scheduling Result",
+                filters={
+                    "scheduling_run": scheduling_run,
+                    "workstation": jc.workstation,
+                    "job_card": ["!=", target_operation],
+                    "planned_start_time": [">=", jc.expected_start_date - timedelta(hours=4)],
+                    "planned_start_time": ["<=", jc.expected_end_date + timedelta(hours=4)]
+                },
+                fields=["job_card", "planned_start_time", "planned_end_time"],
+                order_by="planned_start_time asc",
+                limit=1
+            )
+
+            if not similar_ops:
+                return {
+                    "success": True,
+                    "message": _("No nearby operations found to merge on the same workstation."),
+                    "action": "no_merge_candidates"
+                }
+
+            # Get the adjacent operation
+            adjacent_op = similar_ops[0]
+            adjacent_jc = frappe.get_doc("Job Card", adjacent_op.job_card)
+
+            # Extend current operation to cover both time windows
+            merged_start = min(jc.expected_start_date, adjacent_op.planned_start_time)
+            merged_end = max(jc.expected_end_date, adjacent_op.planned_end_time)
+
+            # Update current Job Card with merged window
+            jc.expected_start_date = merged_start
+            jc.expected_end_date = merged_end
+            jc.flags.ignore_validate_update_after_submit = True
+            jc.save(ignore_permissions=True)
+
+            _update_scheduling_result(scheduling_run, target_operation, {
+                "planned_start_time": merged_start,
+                "planned_end_time": merged_end
+            })
+
+            return {
+                "success": True,
+                "message": _("Operation window extended to merge with adjacent operation {0}").format(adjacent_op.job_card),
+                "merged_with": adjacent_op.job_card,
+                "new_start": merged_start.isoformat(),
+                "new_end": merged_end.isoformat()
+            }
+
         else:
             return {
                 "success": False,
