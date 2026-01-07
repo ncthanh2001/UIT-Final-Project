@@ -255,3 +255,5 @@ print(f"View: /gantt?scheduling_run={result['scheduling_run']}")
 - Với Job Cards: KPI tính từ data thực tế (có thể = 0)
 - Với Scheduling Run: Check các fields `makespan_days`, `total_late_jobs`, etc.
 
+
+

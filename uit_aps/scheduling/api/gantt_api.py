@@ -15,12 +15,13 @@ import json
 
 
 @frappe.whitelist()
-def get_job_cards_for_gantt(scheduling_run: str = None) -> Dict:
+def get_job_cards_for_gantt(scheduling_run: str = None, production_plan: str = None) -> Dict:
     """
     Lay danh sach Job Cards de hien thi tren Gantt Chart
     
     Args:
         scheduling_run: Ten cua APS Scheduling Run (optional)
+        production_plan: Ten cua Production Plan (optional)
         
     Returns:
         dict: Job cards data va workstations
@@ -31,7 +32,7 @@ def get_job_cards_for_gantt(scheduling_run: str = None) -> Dict:
         return get_scheduled_jobs(scheduling_run)
     else:
         # Khong co scheduling_run, lay tat ca Job Cards
-        return get_all_job_cards()
+        return get_all_job_cards(production_plan=production_plan)
 
 
 def get_scheduled_jobs(scheduling_run: str) -> Dict:
@@ -109,17 +110,41 @@ def get_scheduled_jobs(scheduling_run: str) -> Dict:
     }
 
 
-def get_all_job_cards() -> Dict:
+def get_all_job_cards(production_plan: str = None) -> Dict:
     """Lay tat ca Job Cards chua schedule"""
+    
+    # Build filters
+    filters = {
+        "docstatus": ["<", 2],  # Chua cancel
+        "expected_start_date": ["is", "set"],
+        "status": ["!=", "Completed"]  # Khong lay job cards da complete
+    }
+    
+    # Neu co production_plan, filter theo production_plan
+    if production_plan:
+        # Lay danh sach work orders thuoc production plan
+        work_orders = get_work_orders_from_production_plan(production_plan)
+        
+        if work_orders:
+            filters["work_order"] = ["in", work_orders]
+        else:
+            # Neu khong co work orders, tra ve empty
+            return {
+                "jobs": [],
+                "workstations": get_workstations_data(),
+                "kpi": {
+                    "makespan": 0,
+                    "lateJobs": 0,
+                    "avgUtilization": 0,
+                    "scheduleStability": 0
+                },
+                "schedulingRun": None
+            }
     
     # Lay job cards co expected dates va chua complete
     job_cards = frappe.get_all(
         "Job Card",
-        filters={
-            "docstatus": ["<", 2],  # Chua cancel
-            "expected_start_date": ["is", "set"],
-            "status": ["!=", "Completed"]  # Khong lay job cards da complete
-        },
+        filters=filters,
         fields=[
             "name",
             "work_order",
@@ -296,6 +321,35 @@ def get_workstations_without_floors() -> List[Dict]:
     return get_mock_workstations()
 
 
+def get_work_orders_from_production_plan(production_plan: str) -> List[str]:
+    """
+    Lay danh sach Work Orders tu Production Plan
+    
+    Args:
+        production_plan: Ten cua Production Plan
+        
+    Returns:
+        List[str]: Danh sach Work Order names
+    """
+    
+    if not frappe.db.exists("Production Plan", production_plan):
+        return []
+    
+    # Lay work orders tu Production Plan
+    # Work Orders duoc tao tu Production Plan Item (child table)
+    work_orders = frappe.get_all(
+        "Work Order",
+        filters={
+            "production_plan": production_plan,
+            "docstatus": ["<", 2]  # Chua cancel
+        },
+        fields=["name"],
+        pluck="name"
+    )
+    
+    return work_orders
+
+
 def calculate_workstation_utilization(workstation: str) -> float:
     """Tinh utilization cua workstation"""
     
@@ -427,4 +481,29 @@ def update_job_schedule(job_id: str, start_time: str, end_time: str) -> Dict:
     frappe.db.commit()
     
     return {"success": True, "message": "Updated successfully"}
+
+
+@frappe.whitelist()
+def get_production_plans() -> List[str]:
+    """
+    Lay danh sach Production Plans de filter
+    
+    Returns:
+        list: Danh sach Production Plan names
+    """
+    try:
+        production_plans = frappe.get_all(
+            "Production Plan",
+            filters={
+                "docstatus": ["<", 2]  # Khong lay cancelled
+            },
+            fields=["name"],
+            order_by="modified desc",
+            limit=100
+        )
+        
+        return [pp["name"] for pp in production_plans]
+    except Exception as e:
+        frappe.log_error(f"Error fetching production plans: {str(e)}", "GET_PRODUCTION_PLANS")
+        return []
 

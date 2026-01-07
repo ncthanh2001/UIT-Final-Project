@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue"
-import { useRoute } from "vue-router"
+import { ref, computed, onMounted, watch } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import { createResource } from "frappe-ui"
 import {
   ChevronLeft,
@@ -25,6 +25,7 @@ import {
   Lightbulb,
   Target,
   TrendingDown,
+  X,
 } from "lucide-vue-next"
 import BackButton from "@/components/BackButton.vue"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,13 @@ import { Badge } from "@/components/ui/badge"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
 type RiskStatus = "ontime" | "atrisk" | "late"
@@ -68,9 +76,12 @@ interface PlantFloor {
 }
 
 const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const plantFloors = ref<PlantFloor[]>([])
 const schedulingRunInfo = ref<any>(null)
+const productionPlans = ref<Array<{ label: string; value: string }>>([])
+const selectedProductionPlan = ref<string>("all")
 
 const HOURS_PER_DAY = 24
 const WORK_HOURS_START = 8
@@ -138,11 +149,30 @@ const kpiData = ref<KPIData>({
   scheduleStability: 0,
 })
 
+// Resource de load production plans
+const productionPlansResource = createResource({
+  url: "uit_aps.scheduling.api.gantt_api.get_production_plans",
+  auto: true,
+  onSuccess(data: string[]) {
+    productionPlans.value = data.map((pp: string) => ({ label: pp, value: pp }))
+    productionPlans.value.unshift({ label: "All Production Plans", value: "all" })
+    
+    // Set selected production plan from route
+    if (route.query.production_plan) {
+      selectedProductionPlan.value = route.query.production_plan as string
+    }
+  },
+  onError(error: any) {
+    console.error("Error loading production plans:", error)
+  }
+})
+
 // Resource de load gantt data
 const ganttResource = createResource({
   url: "uit_aps.scheduling.api.gantt_api.get_job_cards_for_gantt",
   params: {
-    scheduling_run: route.query.scheduling_run as string || null
+    scheduling_run: route.query.scheduling_run as string || null,
+    production_plan: route.query.production_plan as string || null
   },
   auto: false,
   onSuccess(data: any) {
@@ -197,11 +227,33 @@ const convertJobToGanttFormat = (apiJob: any): Job => {
 const loadGanttData = () => {
   ganttResource.update({
     params: {
-      scheduling_run: route.query.scheduling_run as string || null
+      scheduling_run: route.query.scheduling_run as string || null,
+      production_plan: route.query.production_plan as string || null
     }
   })
   ganttResource.fetch()
 }
+
+const clearProductionPlanFilter = () => {
+  selectedProductionPlan.value = "all"
+}
+
+// Watch selectedProductionPlan and update router + reload data
+watch(selectedProductionPlan, (newValue) => {
+  // Update router query
+  const query: any = { ...route.query }
+  
+  if (newValue === "all") {
+    delete query.production_plan
+  } else {
+    query.production_plan = newValue
+  }
+  
+  router.push({ query })
+  
+  // Reload data
+  loadGanttData()
+})
 
 const aiRecommendation: AIRecommendation = {
   event: "Rush order detected",
@@ -410,8 +462,13 @@ const priorityLabels = {
     <div class="px-6 py-3 border-b border-border bg-card">
       <div class="flex items-center justify-between">
         <BackButton to="/" label="Quay lai" />
-        <div v-if="schedulingRunInfo" class="text-sm text-muted-foreground">
-          Scheduling Run: <span class="font-medium text-foreground">{{ schedulingRunInfo.name }}</span>
+        <div class="flex items-center gap-4 text-sm text-muted-foreground">
+          <div v-if="schedulingRunInfo">
+            Scheduling Run: <span class="font-medium text-foreground">{{ schedulingRunInfo.name }}</span>
+          </div>
+          <div v-if="route.query.production_plan">
+            Production Plan: <span class="font-medium text-foreground">{{ route.query.production_plan }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -482,6 +539,29 @@ const priorityLabels = {
       </div>
 
       <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 mr-2">
+          <Select v-model="selectedProductionPlan">
+            <SelectTrigger class="w-[240px] h-9">
+              <Filter class="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Chọn Production Plan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="plan in productionPlans" :key="plan.value" :value="plan.value">
+                {{ plan.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Button 
+            v-if="selectedProductionPlan !== 'all'" 
+            variant="ghost" 
+            size="icon" 
+            class="h-9 w-9"
+            @click="clearProductionPlanFilter"
+          >
+            <X class="h-4 w-4" />
+          </Button>
+        </div>
+
         <div class="flex items-center gap-1 bg-muted rounded-lg p-1">
           <Button v-for="mode in viewModes" :key="mode.key" :variant="viewMode === mode.key ? 'default' : 'ghost'"
             size="sm" class="h-7 px-2 text-xs" @click="viewMode = mode.key">
@@ -489,10 +569,6 @@ const priorityLabels = {
           </Button>
         </div>
 
-        <Button variant="outline" size="sm" class="gap-2">
-          <Filter class="h-4 w-4" />
-          Lọc
-        </Button>
         <Button variant="outline" size="sm" class="gap-2">
           <Download class="h-4 w-4" />
           Xuất
