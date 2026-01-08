@@ -1,0 +1,221 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36" version="29.2.10">
+  <diagram name="Hybrid APS ERD" id="vL7fuNUUy4NUI04-u9L3">
+    <mxGraphModel dx="2000" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;HYBRID APS SYSTEM - Entity Relationship Diagram&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="500" y="20" width="600" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="70" width="220" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="75" width="220" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_erpnext" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="100" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_erpnext_text" value="ERPNext Standard DocTypes" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1385" y="100" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_aps" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="125" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_aps_text" value="UIT APS Custom DocTypes" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1385" y="125" width="150" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_settings" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="150" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_settings_text" value="Settings/Configuration" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1385" y="150" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ERPNext Standard DocTypes ==================== -->
+
+        <!-- Production Plan -->
+        <mxCell id="production_plan" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;Production Plan&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;posting_date: date&lt;br/&gt;company: varchar(140)&lt;br/&gt;status: varchar(20)&lt;br/&gt;total_planned_qty: float&lt;br/&gt;total_produced_qty: float&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="100" width="200" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Work Order -->
+        <mxCell id="work_order" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;Work Order&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; production_plan: varchar(140)&lt;br/&gt;production_item: varchar(140)&lt;br/&gt;qty: float&lt;br/&gt;produced_qty: float&lt;br/&gt;planned_start_date: datetime&lt;br/&gt;planned_end_date: datetime&lt;br/&gt;status: varchar(20)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; bom_no: varchar(140)&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="300" width="220" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Job Card -->
+        <mxCell id="job_card" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;Job Card&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; work_order: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; workstation: varchar(140)&lt;br/&gt;operation: varchar(140)&lt;br/&gt;for_quantity: float&lt;br/&gt;time_required: float (mins)&lt;br/&gt;expected_start_date: datetime&lt;br/&gt;expected_end_date: datetime&lt;br/&gt;status: varchar(20)&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="550" width="220" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- Workstation -->
+        <mxCell id="workstation" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;Workstation&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;workstation_name: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; workstation_type: varchar(140)&lt;br/&gt;production_capacity: int&lt;br/&gt;status: varchar(20)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; holiday_list: varchar(140)&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="550" width="220" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Workstation Working Hour -->
+        <mxCell id="workstation_working_hour" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;Workstation Working Hour&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; parent: varchar(140)&lt;br/&gt;enabled: check&lt;br/&gt;start_time: time&lt;br/&gt;end_time: time&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="750" width="220" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- BOM -->
+        <mxCell id="bom" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;BOM&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;item: varchar(140)&lt;br/&gt;quantity: float&lt;br/&gt;is_active: check&lt;br/&gt;is_default: check&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="380" y="300" width="180" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- BOM Operation -->
+        <mxCell id="bom_operation" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;BOM Operation&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; parent: varchar(140)&lt;br/&gt;operation: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; workstation: varchar(140)&lt;br/&gt;time_in_mins: float&lt;br/&gt;sequence_id: int&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="600" y="300" width="200" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== UIT APS Custom DocTypes ==================== -->
+
+        <!-- APS Scheduling Run -->
+        <mxCell id="aps_scheduling_run" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;APS Scheduling Run&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; production_plan: varchar(140)&lt;br/&gt;scheduling_strategy: select&lt;br/&gt;scheduling_tier: select&lt;br/&gt;run_status: select&lt;br/&gt;run_date: datetime&lt;br/&gt;time_limit_seconds: int&lt;br/&gt;makespan_weight: float&lt;br/&gt;tardiness_weight: float&lt;br/&gt;─────── Results ───────&lt;br/&gt;total_job_cards: int&lt;br/&gt;total_late_jobs: int&lt;br/&gt;makespan_minutes: int&lt;br/&gt;solver_status: select&lt;br/&gt;solve_time_seconds: float&lt;br/&gt;machine_utilization: float&lt;br/&gt;─────── LLM ───────&lt;br/&gt;llm_analysis_content: text&lt;br/&gt;llm_analysis_date: datetime&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="850" y="80" width="220" height="380" as="geometry" />
+        </mxCell>
+
+        <!-- APS Scheduling Result -->
+        <mxCell id="aps_scheduling_result" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;APS Scheduling Result&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; scheduling_run: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; job_card: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; work_order: varchar(140)&lt;br/&gt;&lt;b&gt;FK&lt;/b&gt; workstation: varchar(140)&lt;br/&gt;operation: varchar(140)&lt;br/&gt;planned_start_time: datetime&lt;br/&gt;planned_end_time: datetime&lt;br/&gt;is_late: check&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="850" y="520" width="220" height="210" as="geometry" />
+        </mxCell>
+
+        <!-- APS Chatgpt Settings -->
+        <mxCell id="aps_chatgpt_settings" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;b&gt;APS Chatgpt Settings&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;p style=&quot;margin:0 0 0 4px;line-height:1.4;font-size:11px;&quot;&gt;&lt;b&gt;PK&lt;/b&gt; name: varchar(140)&lt;br/&gt;api_key: code (OpenAI)&lt;br/&gt;&lt;i&gt;(Single DocType)&lt;/i&gt;&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;fontSize=12;fontFamily=Helvetica;html=1;rounded=0;shadow=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="100" width="180" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== Relationships ==================== -->
+
+        <!-- Production Plan -> Work Order (1:N) -->
+        <mxCell id="rel_pp_wo" value="1:N" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;startArrow=ERone;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="production_plan" target="work_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Work Order -> Job Card (1:N) -->
+        <mxCell id="rel_wo_jc" value="1:N" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;startArrow=ERone;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="work_order" target="job_card">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Job Card -> Workstation (N:1) -->
+        <mxCell id="rel_jc_ws" value="N:1" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERone;startArrow=ERoneToMany;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="job_card" target="workstation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Workstation -> Working Hour (1:N) -->
+        <mxCell id="rel_ws_wh" value="1:N" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;startArrow=ERone;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="workstation" target="workstation_working_hour">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- BOM -> Work Order (1:N) -->
+        <mxCell id="rel_bom_wo" value="1:N" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;startArrow=ERone;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="bom" target="work_order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- BOM -> BOM Operation (1:N) -->
+        <mxCell id="rel_bom_op" value="1:N" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;startArrow=ERone;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="bom" target="bom_operation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- BOM Operation -> Workstation (N:1) -->
+        <mxCell id="rel_bomop_ws" value="N:1" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERone;startArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="bom_operation" target="workstation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Production Plan -> APS Scheduling Run (1:N) -->
+        <mxCell id="rel_pp_asr" value="1:N" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;startArrow=ERone;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0;strokeColor=#82b366;strokeWidth=2;" edge="1" parent="1" source="production_plan" target="aps_scheduling_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- APS Scheduling Run -> APS Scheduling Result (1:N) -->
+        <mxCell id="rel_asr_asres" value="1:N" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;startArrow=ERone;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#82b366;strokeWidth=2;" edge="1" parent="1" source="aps_scheduling_run" target="aps_scheduling_result">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- APS Scheduling Result -> Job Card (N:1) -->
+        <mxCell id="rel_asres_jc" value="N:1" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERone;startArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.7;exitDx=0;exitDy=0;entryX=1;entryY=0.7;entryDx=0;entryDy=0;strokeColor=#82b366;strokeWidth=2;" edge="1" parent="1" source="aps_scheduling_result" target="job_card">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- APS Scheduling Result -> Workstation (N:1) -->
+        <mxCell id="rel_asres_ws" value="N:1" style="edgeStyle=entityRelationEdgeStyle;fontSize=12;html=1;endArrow=ERone;startArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.4;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;strokeColor=#82b366;strokeWidth=2;" edge="1" parent="1" source="aps_scheduling_result" target="workstation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== Section Labels ==================== -->
+
+        <mxCell id="section_erpnext" value="&lt;b&gt;ERPNext Manufacturing Module&lt;/b&gt;" style="text;html=1;strokeColor=#6c8ebf;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="200" y="60" width="250" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="section_aps" value="&lt;b&gt;UIT APS Scheduling Module&lt;/b&gt;" style="text;html=1;strokeColor=#82b366;fillColor=#d5e8d4;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="880" y="50" width="220" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== Data Flow Annotations ==================== -->
+
+        <mxCell id="flow1" value="① Load Production Data" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="500" y="130" width="140" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow2" value="② Schedule with OR-Tools/RL/GNN" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="880" y="470" width="200" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="flow3" value="③ Update Job Card times" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=2;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="500" y="700" width="140" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== Tier Architecture Box ==================== -->
+
+        <mxCell id="tier_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="250" width="200" height="280" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier_title" value="&lt;b&gt;Hybrid APS Tiers&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="255" width="200" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier1" value="&lt;b&gt;Tier 1: OR-Tools&lt;/b&gt;&lt;br&gt;CP-SAT Solver&lt;br&gt;Constraint Programming" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="285" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier2" value="&lt;b&gt;Tier 2: RL Agent&lt;/b&gt;&lt;br&gt;PPO / SAC Agents&lt;br&gt;Real-time Adjustment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="350" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier3" value="&lt;b&gt;Tier 3: GNN&lt;/b&gt;&lt;br&gt;Graph Neural Network&lt;br&gt;Bottleneck Prediction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="415" width="170" height="55" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier_llm" value="&lt;b&gt;LLM Advisor&lt;/b&gt;&lt;br&gt;OpenAI GPT&lt;br&gt;AI Recommendations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="480" width="170" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Arrows between tiers -->
+        <mxCell id="tier_arrow1" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="tier1" target="tier2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier_arrow2" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="tier2" target="tier3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tier_arrow3" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="tier3" target="tier_llm">
+          <mxGeometry width="50" height="50" relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Connection from APS Settings to Scheduling Run -->
+        <mxCell id="rel_settings_run" value="uses" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;html=1;endArrow=open;endFill=0;dashed=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.1;entryDx=0;entryDy=0;strokeColor=#d6b656;" edge="1" parent="1" source="aps_chatgpt_settings" target="aps_scheduling_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,294 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-01-07 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_basic",
+  "scheduling_run",
+  "agent_type",
+  "training_status",
+  "column_break_basic",
+  "started_at",
+  "completed_at",
+  "total_duration_seconds",
+  "section_config",
+  "max_episodes",
+  "learning_rate",
+  "gamma",
+  "column_break_config",
+  "hidden_sizes",
+  "batch_size",
+  "section_progress",
+  "current_episode",
+  "progress_percentage",
+  "column_break_progress",
+  "episodes_per_second",
+  "estimated_time_remaining",
+  "section_metrics",
+  "best_reward",
+  "avg_reward_last_100",
+  "total_steps",
+  "column_break_metrics",
+  "best_makespan",
+  "best_tardiness",
+  "avg_loss",
+  "section_chart",
+  "reward_history",
+  "loss_history",
+  "section_model",
+  "model_path",
+  "model_size_mb",
+  "column_break_model",
+  "obs_dim",
+  "action_dim"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_basic",
+   "fieldtype": "Section Break",
+   "label": "Training Information"
+  },
+  {
+   "fieldname": "scheduling_run",
+   "fieldtype": "Link",
+   "label": "Scheduling Run",
+   "options": "APS Scheduling Run"
+  },
+  {
+   "fieldname": "agent_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Agent Type",
+   "options": "ppo\nsac"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "training_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Training Status",
+   "options": "Pending\nRunning\nCompleted\nFailed\nCancelled"
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "started_at",
+   "fieldtype": "Datetime",
+   "label": "Started At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completed_at",
+   "fieldtype": "Datetime",
+   "label": "Completed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_duration_seconds",
+   "fieldtype": "Float",
+   "label": "Total Duration (seconds)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_config",
+   "fieldtype": "Section Break",
+   "label": "Training Configuration"
+  },
+  {
+   "default": "100",
+   "fieldname": "max_episodes",
+   "fieldtype": "Int",
+   "label": "Max Episodes"
+  },
+  {
+   "default": "0.0003",
+   "fieldname": "learning_rate",
+   "fieldtype": "Float",
+   "label": "Learning Rate"
+  },
+  {
+   "default": "0.99",
+   "fieldname": "gamma",
+   "fieldtype": "Float",
+   "label": "Discount Factor (Gamma)"
+  },
+  {
+   "fieldname": "column_break_config",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "[256, 256]",
+   "fieldname": "hidden_sizes",
+   "fieldtype": "Data",
+   "label": "Hidden Layer Sizes"
+  },
+  {
+   "default": "64",
+   "fieldname": "batch_size",
+   "fieldtype": "Int",
+   "label": "Batch Size"
+  },
+  {
+   "fieldname": "section_progress",
+   "fieldtype": "Section Break",
+   "label": "Training Progress"
+  },
+  {
+   "default": "0",
+   "fieldname": "current_episode",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Current Episode",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "progress_percentage",
+   "fieldtype": "Percent",
+   "label": "Progress",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_progress",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "episodes_per_second",
+   "fieldtype": "Float",
+   "label": "Episodes/Second",
+   "read_only": 1
+  },
+  {
+   "fieldname": "estimated_time_remaining",
+   "fieldtype": "Data",
+   "label": "Est. Time Remaining",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_metrics",
+   "fieldtype": "Section Break",
+   "label": "Training Metrics"
+  },
+  {
+   "fieldname": "best_reward",
+   "fieldtype": "Float",
+   "label": "Best Reward",
+   "read_only": 1
+  },
+  {
+   "fieldname": "avg_reward_last_100",
+   "fieldtype": "Float",
+   "label": "Avg Reward (Last 100)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_steps",
+   "fieldtype": "Int",
+   "label": "Total Steps",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_metrics",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "best_makespan",
+   "fieldtype": "Float",
+   "label": "Best Makespan (mins)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "best_tardiness",
+   "fieldtype": "Float",
+   "label": "Best Tardiness (mins)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "avg_loss",
+   "fieldtype": "Float",
+   "label": "Avg Loss",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_chart",
+   "fieldtype": "Section Break",
+   "label": "Training History (JSON)"
+  },
+  {
+   "fieldname": "reward_history",
+   "fieldtype": "Code",
+   "label": "Reward History",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "loss_history",
+   "fieldtype": "Code",
+   "label": "Loss History",
+   "options": "JSON",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_model",
+   "fieldtype": "Section Break",
+   "label": "Model Information"
+  },
+  {
+   "fieldname": "model_path",
+   "fieldtype": "Data",
+   "label": "Model Path",
+   "read_only": 1
+  },
+  {
+   "fieldname": "model_size_mb",
+   "fieldtype": "Float",
+   "label": "Model Size (MB)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_model",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "obs_dim",
+   "fieldtype": "Int",
+   "label": "Observation Dimension",
+   "read_only": 1
+  },
+  {
+   "fieldname": "action_dim",
+   "fieldtype": "Int",
+   "label": "Action Dimension",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-07 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "UIT APS",
+ "name": "APS RL Training Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

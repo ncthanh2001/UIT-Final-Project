@@ -596,7 +596,8 @@ $.extend(cur_frm, {
                     fieldtype: "Select",
                     options: "ppo\nsac",
                     default: "ppo",
-                    reqd: 1
+                    reqd: 1,
+                    description: __("PPO: Stable, good for most cases. SAC: Better exploration.")
                 },
                 {
                     label: __("Training Episodes"),
@@ -604,53 +605,351 @@ $.extend(cur_frm, {
                     fieldtype: "Int",
                     default: 100,
                     description: __("More episodes = better learning but longer training time")
+                },
+                {
+                    label: __("Learning Rate"),
+                    fieldname: "learning_rate",
+                    fieldtype: "Float",
+                    default: 0.0003,
+                    description: __("Higher = faster learning but less stable")
+                },
+                {
+                    label: __("Discount Factor (Gamma)"),
+                    fieldname: "gamma",
+                    fieldtype: "Float",
+                    default: 0.99,
+                    description: __("How much to value future rewards (0.9-0.999)")
+                },
+                {
+                    fieldtype: "Section Break",
+                    label: __("Training History")
+                },
+                {
+                    fieldname: "training_history_html",
+                    fieldtype: "HTML"
                 }
             ],
             primary_action_label: __("Start Training"),
             primary_action: function(values) {
                 d.hide();
-                frm.train_rl_agent(values);
+                frm.start_training_with_progress(values);
+            },
+            secondary_action_label: __("View History"),
+            secondary_action: function() {
+                frm.show_training_history();
             }
         });
+
+        // Load training history in dialog
+        frappe.call({
+            method: "uit_aps.scheduling.rl.training_api.get_training_history",
+            args: {
+                scheduling_run: frm.doc.name,
+                limit: 5
+            },
+            callback: function(r) {
+                if (r.message && r.message.success && r.message.logs.length > 0) {
+                    let html = `<table class="table table-sm table-bordered" style="font-size: 11px;">
+                        <thead><tr>
+                            <th>${__("Agent")}</th>
+                            <th>${__("Episodes")}</th>
+                            <th>${__("Best Reward")}</th>
+                            <th>${__("Status")}</th>
+                        </tr></thead><tbody>`;
+
+                    r.message.logs.forEach(log => {
+                        let statusClass = {
+                            "Completed": "success",
+                            "Running": "primary",
+                            "Failed": "danger",
+                            "Cancelled": "warning"
+                        }[log.training_status] || "secondary";
+
+                        html += `<tr>
+                            <td>${log.agent_type.toUpperCase()}</td>
+                            <td>${log.current_episode}/${log.max_episodes}</td>
+                            <td>${(log.best_reward || 0).toFixed(2)}</td>
+                            <td><span class="badge badge-${statusClass}">${log.training_status}</span></td>
+                        </tr>`;
+                    });
+
+                    html += `</tbody></table>`;
+                    d.fields_dict.training_history_html.$wrapper.html(html);
+                } else {
+                    d.fields_dict.training_history_html.$wrapper.html(
+                        `<p class="text-muted">${__("No training history for this scheduling run.")}</p>`
+                    );
+                }
+            }
+        });
+
         d.show();
     },
 
-    train_rl_agent: function(values) {
+    start_training_with_progress: function(values) {
         let frm = this;
 
+        // Start training in background
         frappe.call({
-            method: "uit_aps.scheduling.rl.realtime_api.train_rl_agent",
+            method: "uit_aps.scheduling.rl.training_api.start_training",
             args: {
                 scheduling_run: frm.doc.name,
                 agent_type: values.agent_type,
-                max_episodes: values.max_episodes
+                max_episodes: values.max_episodes,
+                learning_rate: values.learning_rate,
+                gamma: values.gamma,
+                run_in_background: true
             },
-            freeze: true,
-            freeze_message: __("Training RL agent... This may take several minutes."),
             callback: function(r) {
                 if (r.message && r.message.success) {
-                    frappe.msgprint({
-                        title: __("Training Complete"),
-                        message: `
-                            <p><strong>${__("Summary")}:</strong></p>
-                            <ul>
-                                <li>${__("Episodes")}: ${r.message.summary?.total_episodes || 0}</li>
-                                <li>${__("Best Reward")}: ${(r.message.summary?.best_reward || 0).toFixed(2)}</li>
-                                <li>${__("Training Time")}: ${(r.message.summary?.training_time_seconds || 0).toFixed(0)}s</li>
-                            </ul>
-                            <p>${__("Model saved to")}: ${r.message.model_path || "default location"}</p>
-                        `,
-                        indicator: "green"
+                    frappe.show_alert({
+                        message: __("Training started in background"),
+                        indicator: "blue"
                     });
+
+                    // Show progress dialog
+                    frm.show_training_progress_dialog(values.agent_type);
                 } else {
                     frappe.msgprint({
-                        title: __("Training Failed"),
-                        message: r.message ? r.message.message : __("Unknown error"),
+                        title: __("Training Failed to Start"),
+                        message: r.message ? r.message.error : __("Unknown error"),
                         indicator: "red"
                     });
                 }
             }
         });
+    },
+
+    show_training_progress_dialog: function(agent_type) {
+        let frm = this;
+
+        let progress_dialog = new frappe.ui.Dialog({
+            title: __("Training Progress - {0}", [agent_type.toUpperCase()]),
+            size: "large",
+            fields: [
+                {
+                    fieldname: "progress_html",
+                    fieldtype: "HTML"
+                }
+            ]
+        });
+
+        // Function to update progress
+        let update_progress = function() {
+            frappe.call({
+                method: "uit_aps.scheduling.rl.training_api.get_training_history",
+                args: {
+                    scheduling_run: frm.doc.name,
+                    agent_type: agent_type,
+                    limit: 1
+                },
+                callback: function(r) {
+                    if (r.message && r.message.success && r.message.logs.length > 0) {
+                        let log = r.message.logs[0];
+                        let progress = log.progress_percentage || 0;
+                        let statusClass = log.training_status === "Running" ? "primary" :
+                                         log.training_status === "Completed" ? "success" : "danger";
+
+                        let html = `
+                            <div class="training-progress-view">
+                                <div class="row mb-3">
+                                    <div class="col-sm-6">
+                                        <h5>${__("Status")}:
+                                            <span class="badge badge-${statusClass}">${log.training_status}</span>
+                                        </h5>
+                                    </div>
+                                    <div class="col-sm-6 text-right">
+                                        <h5>${__("Episode")}: ${log.current_episode || 0} / ${log.max_episodes || 0}</h5>
+                                    </div>
+                                </div>
+
+                                <div class="progress mb-3" style="height: 30px;">
+                                    <div class="progress-bar progress-bar-striped ${log.training_status === 'Running' ? 'progress-bar-animated' : ''}"
+                                         role="progressbar"
+                                         style="width: ${progress}%; background-color: var(--${statusClass === 'primary' ? 'blue' : statusClass === 'success' ? 'green' : 'red'});"
+                                         aria-valuenow="${progress}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                        ${progress.toFixed(1)}%
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-sm-3">
+                                        <div class="stat-card text-center p-2 border rounded">
+                                            <h3 class="text-success">${(log.best_reward || 0).toFixed(2)}</h3>
+                                            <small>${__("Best Reward")}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="stat-card text-center p-2 border rounded">
+                                            <h3 class="text-info">${(log.avg_reward_last_100 || 0).toFixed(2)}</h3>
+                                            <small>${__("Avg Reward (100)")}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="stat-card text-center p-2 border rounded">
+                                            <h3 class="text-primary">${log.best_makespan ? log.best_makespan.toFixed(0) + ' min' : '-'}</h3>
+                                            <small>${__("Best Makespan")}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <div class="stat-card text-center p-2 border rounded">
+                                            <h3 class="text-warning">${log.best_tardiness ? log.best_tardiness.toFixed(0) + ' min' : '-'}</h3>
+                                            <small>${__("Best Tardiness")}</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <p><strong>${__("Speed")}:</strong> ${(log.episodes_per_second || 0).toFixed(2)} eps/sec</p>
+                                        <p><strong>${__("Est. Remaining")}:</strong> ${log.estimated_time_remaining || '-'}</p>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <p><strong>${__("Total Steps")}:</strong> ${log.total_steps || 0}</p>
+                                        <p><strong>${__("Started")}:</strong> ${log.started_at || '-'}</p>
+                                    </div>
+                                </div>
+
+                                ${log.training_status === "Completed" ? `
+                                    <div class="alert alert-success mt-3">
+                                        <strong>${__("Training Completed!")}</strong>
+                                        ${__("The model has been saved and is ready for use.")}
+                                        <br>
+                                        <a href="/app/aps-rl-training-log/${log.name}" class="btn btn-sm btn-success mt-2">
+                                            ${__("View Full Training Log")}
+                                        </a>
+                                    </div>
+                                ` : ''}
+
+                                ${log.training_status === "Failed" ? `
+                                    <div class="alert alert-danger mt-3">
+                                        <strong>${__("Training Failed!")}</strong>
+                                        ${__("Please check the error log for details.")}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+
+                        progress_dialog.fields_dict.progress_html.$wrapper.html(html);
+
+                        // Stop polling if training is complete
+                        if (log.training_status !== "Running") {
+                            if (frm._training_poll_interval) {
+                                clearInterval(frm._training_poll_interval);
+                                frm._training_poll_interval = null;
+                            }
+                        }
+                    } else {
+                        progress_dialog.fields_dict.progress_html.$wrapper.html(
+                            `<p class="text-muted">${__("Waiting for training to start...")}</p>`
+                        );
+                    }
+                }
+            });
+        };
+
+        // Initial update
+        update_progress();
+
+        // Poll every 3 seconds
+        frm._training_poll_interval = setInterval(update_progress, 3000);
+
+        // Clear interval when dialog closes
+        progress_dialog.onhide = function() {
+            if (frm._training_poll_interval) {
+                clearInterval(frm._training_poll_interval);
+                frm._training_poll_interval = null;
+            }
+        };
+
+        progress_dialog.show();
+    },
+
+    show_training_history: function() {
+        let frm = this;
+
+        frappe.call({
+            method: "uit_aps.scheduling.rl.training_api.get_training_history",
+            args: {
+                scheduling_run: frm.doc.name,
+                limit: 20
+            },
+            callback: function(r) {
+                if (r.message && r.message.success) {
+                    let logs = r.message.logs;
+
+                    if (logs.length === 0) {
+                        frappe.msgprint({
+                            title: __("Training History"),
+                            message: __("No training history found for this scheduling run."),
+                            indicator: "blue"
+                        });
+                        return;
+                    }
+
+                    let html = `
+                        <div class="training-history">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>${__("Log")}</th>
+                                        <th>${__("Agent")}</th>
+                                        <th>${__("Episodes")}</th>
+                                        <th>${__("Best Reward")}</th>
+                                        <th>${__("Makespan")}</th>
+                                        <th>${__("Duration")}</th>
+                                        <th>${__("Status")}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                    logs.forEach(log => {
+                        let statusClass = {
+                            "Completed": "success",
+                            "Running": "primary",
+                            "Failed": "danger",
+                            "Cancelled": "warning",
+                            "Pending": "secondary"
+                        }[log.training_status] || "secondary";
+
+                        let duration = log.total_duration_seconds ?
+                            (log.total_duration_seconds > 60 ?
+                                (log.total_duration_seconds / 60).toFixed(1) + ' min' :
+                                log.total_duration_seconds.toFixed(0) + ' sec') : '-';
+
+                        html += `
+                            <tr style="cursor: pointer;" onclick="frappe.set_route('Form', 'APS RL Training Log', '${log.name}')">
+                                <td><a href="/app/aps-rl-training-log/${log.name}">${log.name}</a></td>
+                                <td><strong>${log.agent_type.toUpperCase()}</strong></td>
+                                <td>${log.current_episode || 0} / ${log.max_episodes || 0}</td>
+                                <td>${(log.best_reward || 0).toFixed(2)}</td>
+                                <td>${log.best_makespan ? log.best_makespan.toFixed(0) + ' min' : '-'}</td>
+                                <td>${duration}</td>
+                                <td><span class="badge badge-${statusClass}">${log.training_status}</span></td>
+                            </tr>`;
+                    });
+
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>`;
+
+                    frappe.msgprint({
+                        title: __("Training History"),
+                        message: html,
+                        indicator: "blue",
+                        wide: true
+                    });
+                }
+            }
+        });
+    },
+
+    train_rl_agent: function(values) {
+        // Legacy function - redirect to new training with progress
+        this.start_training_with_progress(values);
     },
 
     // ============================================
