@@ -239,29 +239,65 @@ def _run_training_job(
             if episode_reward > best_reward:
                 best_reward = episode_reward
 
-        # Save model
-        save_dir = frappe.get_site_path("private", "files", "rl_models", agent_type, "best")
-        os.makedirs(save_dir, exist_ok=True)
-        agent.save(save_dir)
+        # Save model with versioning
+        from datetime import datetime as dt
+
+        # Create versioned save directory (for history)
+        timestamp = dt.now().strftime("%Y%m%d_%H%M%S")
+        version_dir = frappe.get_site_path(
+            "private", "files", "rl_models", agent_type, "history", timestamp
+        )
+        os.makedirs(version_dir, exist_ok=True)
+        agent.save(version_dir)
+
+        # Also save to "best" directory (always keeps latest/best for deployment)
+        best_dir = frappe.get_site_path("private", "files", "rl_models", agent_type, "best")
+        os.makedirs(best_dir, exist_ok=True)
+
+        # Check if this model is better than existing best
+        should_update_best = True
+        best_reward_file = os.path.join(best_dir, "best_reward.txt")
+        if os.path.exists(best_reward_file):
+            try:
+                with open(best_reward_file, "r") as f:
+                    existing_best = float(f.read().strip())
+                if best_reward <= existing_best:
+                    should_update_best = False
+            except:
+                pass
+
+        if should_update_best:
+            # Update best model
+            agent.save(best_dir)
+            with open(best_reward_file, "w") as f:
+                f.write(str(best_reward))
 
         # Get model size
         model_size = 0
-        for f in os.listdir(save_dir):
-            model_size += os.path.getsize(os.path.join(save_dir, f))
+        for f in os.listdir(version_dir):
+            fpath = os.path.join(version_dir, f)
+            if os.path.isfile(fpath):
+                model_size += os.path.getsize(fpath)
         model_size_mb = model_size / (1024 * 1024)
 
         # Complete training
         logger.complete_training(
-            model_path=save_dir,
+            model_path=version_dir,
             model_size_mb=round(model_size_mb, 2),
-            final_metrics={"obs_dim": obs_dim, "action_dim": action_dim}
+            final_metrics={
+                "obs_dim": obs_dim,
+                "action_dim": action_dim,
+                "is_best": should_update_best
+            }
         )
 
         return {
             "success": True,
             "training_log": log_name,
-            "model_path": save_dir,
+            "model_path": version_dir,
+            "best_model_path": best_dir if should_update_best else None,
             "best_reward": best_reward,
+            "is_new_best": should_update_best,
             "total_episodes": max_episodes
         }
 

@@ -97,12 +97,16 @@ def evaluate_agent(
             config = SACConfig()
             agent = SACAgent(env.obs_dim, env.action_dim, config)
 
-        # Try to load trained model
-        model_path = f"models/rl_{agent_type}/best"
+        # Try to load trained model from Frappe site path
+        model_path = frappe.get_site_path("private", "files", "rl_models", agent_type.lower(), "best")
         try:
-            agent.load(model_path)
-        except Exception:
-            frappe.log_error("No trained model found, using untrained agent")
+            import os
+            if os.path.exists(model_path):
+                agent.load(model_path)
+            else:
+                frappe.log_error(f"Model path not found: {model_path}", "Evaluation - No Model")
+        except Exception as e:
+            frappe.log_error(f"No trained model found: {str(e)}", "Evaluation - Load Error")
 
         # Configure evaluation
         eval_config = EvaluationConfig(

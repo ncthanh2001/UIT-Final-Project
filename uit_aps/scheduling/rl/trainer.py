@@ -36,9 +36,9 @@ class TrainerConfig:
     log_frequency: int = 10
     verbose: bool = True
 
-    # Paths
-    save_dir: str = "models/rl_scheduling"
-    log_dir: str = "logs/rl_scheduling"
+    # Paths (will be set to Frappe site path if running in Frappe context)
+    save_dir: str = ""  # Empty means use default Frappe path
+    log_dir: str = ""   # Empty means use default Frappe path
 
     # Agent selection
     agent_type: str = "ppo"  # "ppo" or "sac"
@@ -468,11 +468,19 @@ def train_from_ortools(
     )
     env = SchedulingEnv(env_config)
 
-    # Create trainer
+    # Create trainer with proper save directory
+    # Try to use Frappe site path if available
+    if not save_dir:
+        try:
+            import frappe
+            save_dir = frappe.get_site_path("private", "files", "rl_models", agent_type, "best")
+        except ImportError:
+            save_dir = f"models/rl_{agent_type}"
+
     trainer_config = TrainerConfig(
         max_episodes=max_episodes,
         agent_type=agent_type,
-        save_dir=save_dir or f"models/rl_{agent_type}"
+        save_dir=save_dir
     )
 
     trainer, agent = create_trainer(env, agent_type, trainer_config)
