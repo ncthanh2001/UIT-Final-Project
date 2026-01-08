@@ -173,8 +173,9 @@ def _run_training_job(
         best_reward = float('-inf')
         for episode in range(max_episodes):
             # Reset environment with schedule data
-            state = env.reset(
-                operations=schedule_data.get("operations", []),
+            # Note: reset() returns (observation, info) tuple
+            state, info = env.reset(
+                initial_schedule=schedule_data.get("operations", []),
                 machines=schedule_data.get("machines", [])
             )
 
@@ -183,14 +184,34 @@ def _run_training_job(
             done = False
 
             while not done:
-                # Select action
-                action, info = agent.select_action(state)
+                # Select action - returns (action_tuple, info_dict)
+                action, action_info = agent.select_action(state)
 
-                # Take step
-                next_state, reward, done, step_info = env.step(action)
+                # Take step - returns (obs, reward, terminated, truncated, info)
+                next_state, reward, terminated, truncated, step_info = env.step(action)
+                done = terminated or truncated
 
                 # Store transition for learning
-                agent.store_transition(state, action, reward, next_state, done)
+                # PPO requires (state, action, reward, value, log_prob, done)
+                # SAC requires (state, action, reward, next_state, done)
+                if agent_type.lower() == "ppo":
+                    agent.store_transition(
+                        state=state,
+                        action=action,
+                        reward=reward,
+                        value=action_info.get("value", 0.0),
+                        log_prob=action_info.get("log_prob", 0.0),
+                        done=done
+                    )
+                else:
+                    # SAC agent
+                    agent.store_transition(
+                        state=state,
+                        action=action,
+                        reward=reward,
+                        next_state=next_state,
+                        done=done
+                    )
 
                 episode_reward += reward
                 episode_steps += 1
@@ -200,14 +221,15 @@ def _run_training_job(
                 if episode_steps > 1000:
                     break
 
-            # Update agent
-            loss = agent.update()
+            # Update agent at end of episode
+            loss_info = agent.update()
+            loss = loss_info.get("policy_loss", 0.0) if loss_info else 0.0
 
-            # Get metrics from environment
+            # Get metrics from environment state
             metrics = {
                 "steps": episode_steps,
-                "makespan": env.get_makespan(),
-                "tardiness": env.get_total_tardiness()
+                "makespan": step_info.get("total_tardiness_mins", 0) if step_info else 0,
+                "tardiness": step_info.get("total_tardiness_mins", 0) if step_info else 0
             }
 
             # Log episode
