@@ -181,13 +181,13 @@ class TrainingLogger:
                 "progress_percentage": progress,
                 "episodes_per_second": round(eps_per_sec, 2),
                 "estimated_time_remaining": est_remaining,
-                "best_reward": round(self.best_reward, 4),
+                "best_reward": round(self.best_reward, 4) if self.best_reward != float('-inf') else 0.0,
                 "avg_reward_last_100": round(avg_reward_100, 4),
                 "total_steps": self.total_steps,
-                "avg_loss": round(avg_loss, 6) if avg_loss else None,
+                "avg_loss": round(avg_loss, 6) if avg_loss else 0.0,
                 # Only store last 500 points for chart
-                "reward_history": json.dumps(self.reward_history[-500:]),
-                "loss_history": json.dumps(self.loss_history[-500:]) if self.loss_history else None
+                "reward_history": json.dumps(self.reward_history[-500:]) if self.reward_history else "[]",
+                "loss_history": json.dumps(self.loss_history[-500:]) if self.loss_history else "[]"
             }
 
             if self.best_makespan != float('inf'):
@@ -230,10 +230,10 @@ class TrainingLogger:
             "total_duration_seconds": round(elapsed_time, 2),
             "current_episode": max_episodes,
             "progress_percentage": 100,
-            "model_path": model_path,
-            "model_size_mb": model_size_mb,
-            "reward_history": json.dumps(self.reward_history[-500:]),
-            "loss_history": json.dumps(self.loss_history[-500:]) if self.loss_history else None
+            "model_path": model_path or "",
+            "model_size_mb": model_size_mb or 0.0,
+            "reward_history": json.dumps(self.reward_history[-500:]) if self.reward_history else "[]",
+            "loss_history": json.dumps(self.loss_history[-500:]) if self.loss_history else "[]"
         }
 
         # Add any final metrics
