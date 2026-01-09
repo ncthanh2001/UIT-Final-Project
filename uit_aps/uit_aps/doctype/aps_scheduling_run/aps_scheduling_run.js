@@ -94,6 +94,19 @@ $.extend(cur_frm, {
         frm.clear_custom_buttons();
 
         // ============================================
+        // APPROVAL: Apply Schedule to Job Cards
+        // ============================================
+        if (frm.doc.run_status === "Pending Approval") {
+            frm.add_custom_button(__("Apply Schedule"), function() {
+                frm.apply_scheduling_to_jobcards();
+            }).addClass("btn-primary-dark");
+
+            frm.add_custom_button(__("Review Results"), function() {
+                frm.review_pending_results();
+            });
+        }
+
+        // ============================================
         // TIER 1: OR-Tools Scheduling
         // ============================================
         if (frm.doc.run_status === "Pending" || frm.doc.run_status === "Failed") {
@@ -172,7 +185,7 @@ $.extend(cur_frm, {
             frm.check_tier_status(true);
         }, __("Utilities"));
 
-        if (frm.doc.run_status === "Completed") {
+        if (frm.doc.run_status === "Completed" || frm.doc.run_status === "Pending Approval" || frm.doc.run_status === "Applied") {
             frm.add_custom_button(__("View Results"), function() {
                 frm.view_scheduling_results();
             }, __("Utilities"));
@@ -180,7 +193,179 @@ $.extend(cur_frm, {
             frm.add_custom_button(__("Export to Gantt"), function() {
                 frm.export_to_gantt();
             }, __("Utilities"));
+
+            frm.add_custom_button(__("View Optimization Analysis"), function() {
+                frm.show_optimization_analysis();
+            }, __("Utilities"));
         }
+    },
+
+    // ============================================
+    // APPROVAL WORKFLOW: Apply Schedule Methods
+    // ============================================
+    apply_scheduling_to_jobcards: function() {
+        let frm = this;
+
+        frappe.confirm(
+            __("Apply all scheduling recommendations to Job Cards? This will update expected start/end dates on the Job Cards."),
+            function() {
+                frappe.call({
+                    method: "uit_aps.scheduling.api.scheduling_api.apply_scheduling_results",
+                    args: {
+                        scheduling_run: frm.doc.name
+                    },
+                    freeze: true,
+                    freeze_message: __("Applying scheduling recommendations to Job Cards..."),
+                    callback: function(r) {
+                        if (r.message && r.message.success) {
+                            frappe.show_alert({
+                                message: __("Successfully applied {0} scheduling recommendations to Job Cards!", [r.message.applied_count]),
+                                indicator: "green"
+                            });
+                            frm.reload_doc();
+                        } else {
+                            frappe.msgprint({
+                                title: __("Apply Failed"),
+                                message: r.message ? r.message.message : __("Failed to apply recommendations"),
+                                indicator: "red"
+                            });
+                        }
+                    },
+                    error: function() {
+                        frappe.msgprint({
+                            title: __("Error"),
+                            message: __("Failed to apply scheduling recommendations"),
+                            indicator: "red"
+                        });
+                    }
+                });
+            }
+        );
+    },
+
+    review_pending_results: function() {
+        let frm = this;
+
+        frappe.call({
+            method: "uit_aps.scheduling.api.scheduling_api.get_pending_results",
+            args: {
+                scheduling_run: frm.doc.name
+            },
+            freeze: true,
+            freeze_message: __("Loading scheduling recommendations..."),
+            callback: function(r) {
+                if (r.message && r.message.success) {
+                    frm.show_pending_results_dialog(r.message.results, r.message.summary);
+                } else {
+                    frappe.msgprint({
+                        title: __("Error"),
+                        message: r.message ? r.message.message : __("Failed to load results"),
+                        indicator: "red"
+                    });
+                }
+            }
+        });
+    },
+
+    show_pending_results_dialog: function(results, summary) {
+        let frm = this;
+
+        let html = `
+            <div class="pending-results-review">
+                <div class="alert alert-info mb-3">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <strong>${summary.total || 0}</strong>
+                            <br><small>${__("Total Recommendations")}</small>
+                        </div>
+                        <div class="col-sm-3">
+                            <strong>${summary.pending || 0}</strong>
+                            <br><small>${__("Pending")}</small>
+                        </div>
+                        <div class="col-sm-3">
+                            <strong>${summary.applied || 0}</strong>
+                            <br><small>${__("Already Applied")}</small>
+                        </div>
+                        <div class="col-sm-3">
+                            <strong>${summary.late_jobs || 0}</strong>
+                            <br><small class="text-danger">${__("Late Jobs")}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table table-sm table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>${__("Job Card")}</th>
+                            <th>${__("Operation")}</th>
+                            <th>${__("Workstation")}</th>
+                            <th>${__("Planned Start")}</th>
+                            <th>${__("Planned End")}</th>
+                            <th>${__("Status")}</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+        if (results && results.length > 0) {
+            results.forEach(result => {
+                let statusBadge = result.is_applied
+                    ? '<span class="badge badge-success">Applied</span>'
+                    : '<span class="badge badge-warning">Pending</span>';
+
+                let lateBadge = result.is_late
+                    ? ' <span class="badge badge-danger">Late</span>'
+                    : '';
+
+                let startTime = result.planned_start_time
+                    ? frappe.datetime.str_to_user(result.planned_start_time)
+                    : '-';
+                let endTime = result.planned_end_time
+                    ? frappe.datetime.str_to_user(result.planned_end_time)
+                    : '-';
+
+                html += `
+                    <tr>
+                        <td><a href="/app/job-card/${result.job_card}">${result.job_card}</a></td>
+                        <td>${result.operation || '-'}</td>
+                        <td>${result.workstation || '-'}</td>
+                        <td>${startTime}</td>
+                        <td>${endTime}</td>
+                        <td>${statusBadge}${lateBadge}</td>
+                    </tr>`;
+            });
+        } else {
+            html += `<tr><td colspan="6" class="text-center">${__("No results found")}</td></tr>`;
+        }
+
+        html += `
+                    </tbody>
+                </table>
+            </div>`;
+
+        let d = new frappe.ui.Dialog({
+            title: __("Review Scheduling Recommendations"),
+            size: "extra-large",
+            fields: [
+                {
+                    fieldtype: "HTML",
+                    fieldname: "results_html",
+                    options: html
+                }
+            ],
+            primary_action_label: __("Apply All Recommendations"),
+            primary_action: function() {
+                d.hide();
+                frm.apply_scheduling_to_jobcards();
+            },
+            secondary_action_label: __("View in List"),
+            secondary_action: function() {
+                d.hide();
+                frappe.set_route("List", "APS Scheduling Result", {
+                    scheduling_run: frm.doc.name
+                });
+            }
+        });
+        d.show();
     },
 
     // ============================================
@@ -1365,6 +1550,8 @@ $.extend(cur_frm, {
         let statusColor = {
             "Pending": "orange",
             "Running": "blue",
+            "Pending Approval": "yellow",
+            "Applied": "green",
             "Completed": "green",
             "Failed": "red"
         }[frm.doc.run_status] || "gray";
@@ -1375,6 +1562,115 @@ $.extend(cur_frm, {
     update_tier_visibility: function() {
         let frm = this;
         // Additional logic to show/hide fields based on tier selection
+    },
+
+    show_optimization_analysis: function() {
+        let frm = this;
+
+        // Build constraints section
+        let constraintsHtml = `
+            <div class="optimization-analysis">
+                <h5 class="text-primary mb-3">${__("Scheduling Constraints Applied")}</h5>
+                <div class="row mb-3">
+                    <div class="col-sm-6">
+                        <ul class="list-unstyled">
+                            <li>${frm.doc.constraint_machine_eligibility ? '✅' : '❌'} ${__("Machine Eligibility")}</li>
+                            <li>${frm.doc.constraint_precedence ? '✅' : '❌'} ${__("Operation Precedence")}</li>
+                            <li>${frm.doc.constraint_no_overlap ? '✅' : '❌'} ${__("No Overlap (Machine)")}</li>
+                        </ul>
+                    </div>
+                    <div class="col-sm-6">
+                        <ul class="list-unstyled">
+                            <li>${frm.doc.constraint_working_hours ? '✅' : '❌'} ${__("Working Hours")}</li>
+                            <li>${frm.doc.constraint_due_dates ? '✅' : '❌'} ${__("Due Date Respect")}</li>
+                            <li>${frm.doc.constraint_setup_time ? '✅' : '❌'} ${__("Setup Time")}</li>
+                        </ul>
+                    </div>
+                </div>
+
+                ${frm.doc.constraints_description ? `
+                    <div class="well" style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size: 12px; white-space: pre-wrap;">
+                        ${frm.doc.constraints_description}
+                    </div>
+                ` : ''}
+
+                <h5 class="text-primary mb-3">${__("Optimization Comparison (vs FIFO Baseline)")}</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr class="bg-light">
+                            <th>${__("Metric")}</th>
+                            <th>${__("FIFO Baseline")}</th>
+                            <th>${__("APS Optimized")}</th>
+                            <th>${__("Improvement")}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>${__("Makespan")}</strong></td>
+                            <td>${frm.doc.baseline_makespan_minutes || 0} ${__("mins")}</td>
+                            <td>${frm.doc.makespan_minutes || 0} ${__("mins")}</td>
+                            <td class="${(frm.doc.improvement_makespan_percent || 0) > 0 ? 'text-success' : 'text-danger'}">
+                                ${(frm.doc.improvement_makespan_percent || 0) > 0 ? '↓' : '↑'}
+                                ${Math.abs(frm.doc.improvement_makespan_percent || 0).toFixed(1)}%
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>${__("Late Jobs")}</strong></td>
+                            <td>${frm.doc.baseline_late_jobs || 0}</td>
+                            <td>${frm.doc.total_late_jobs || 0}</td>
+                            <td class="${(frm.doc.improvement_late_jobs_percent || 0) > 0 ? 'text-success' : 'text-danger'}">
+                                ${(frm.doc.improvement_late_jobs_percent || 0) > 0 ? '↓' : '↑'}
+                                ${Math.abs(frm.doc.improvement_late_jobs_percent || 0).toFixed(1)}%
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>${__("Total Tardiness")}</strong></td>
+                            <td>${frm.doc.baseline_total_tardiness || 0} ${__("mins")}</td>
+                            <td>${frm.doc.total_tardiness_minutes || 0} ${__("mins")}</td>
+                            <td class="${(frm.doc.improvement_tardiness_percent || 0) > 0 ? 'text-success' : 'text-danger'}">
+                                ${(frm.doc.improvement_tardiness_percent || 0) > 0 ? '↓' : '↑'}
+                                ${Math.abs(frm.doc.improvement_tardiness_percent || 0).toFixed(1)}%
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                ${frm.doc.comparison_summary ? `
+                    <div class="alert ${(frm.doc.improvement_makespan_percent || 0) > 0 || (frm.doc.improvement_late_jobs_percent || 0) > 0 ? 'alert-success' : 'alert-warning'}">
+                        <pre style="white-space: pre-wrap; margin: 0; font-family: inherit;">${frm.doc.comparison_summary}</pre>
+                    </div>
+                ` : ''}
+
+                <h5 class="text-primary mb-3">${__("Solver Performance")}</h5>
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="stat-card text-center p-2 border rounded">
+                            <h4 class="text-primary">${frm.doc.solver_status || 'N/A'}</h4>
+                            <small>${__("Solver Status")}</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="stat-card text-center p-2 border rounded">
+                            <h4 class="text-info">${(frm.doc.solve_time_seconds || 0).toFixed(2)}s</h4>
+                            <small>${__("Solve Time")}</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="stat-card text-center p-2 border rounded">
+                            <h4 class="text-warning">${(frm.doc.machine_utilization || 0).toFixed(1)}%</h4>
+                            <small>${__("Machine Utilization")}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        frappe.msgprint({
+            title: __("Optimization Analysis"),
+            message: constraintsHtml,
+            indicator: (frm.doc.improvement_makespan_percent || 0) > 0 || (frm.doc.improvement_late_jobs_percent || 0) > 0 ? "green" : "orange",
+            wide: true
+        });
     },
 
     // ============================================

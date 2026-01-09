@@ -53,6 +53,7 @@ def run_ortools_scheduling(
     """
     from uit_aps.scheduling.ortools.models import SchedulingConfig, ObjectiveWeights
     from uit_aps.scheduling.ortools.scheduler import ORToolsScheduler
+    from uit_aps.scheduling.ortools.baseline import compute_baseline_comparison
     from uit_aps.scheduling.data.erpnext_loader import ERPNextDataLoader
     from uit_aps.scheduling.data.exporters import SchedulingExporter
 
@@ -169,12 +170,28 @@ def run_ortools_scheduling(
                 "Scheduling - Infeasible"
             )
 
+        # Compute baseline comparison (FIFO vs Optimized)
+        baseline_comparison = None
+        if solution.is_feasible and scheduling_run_name:
+            try:
+                baseline_comparison = compute_baseline_comparison(
+                    problem=problem,
+                    optimized_solution=solution,
+                    baseline_algorithm="FIFO"
+                )
+            except Exception as e:
+                frappe.log_error(f"Error computing baseline comparison: {str(e)}", "Baseline Comparison Error")
+
         # Export results
+        # IMPORTANT: update_job_cards=False by default to allow user review
+        # User must explicitly approve and apply using apply_scheduling_results API
         exporter = SchedulingExporter(scheduling_run=scheduling_run_name)
         export_stats = exporter.export_solution(
             solution,
-            update_job_cards=True,
-            create_results=True
+            update_job_cards=False,  # Don't auto-apply, user must confirm
+            create_results=True,
+            baseline_comparison=baseline_comparison,
+            config=config
         )
 
         # Prepare response
@@ -456,4 +473,209 @@ def get_scheduling_statistics(production_plan: str = None, days: int = 30) -> di
         "average_on_time_rate": round(on_time_rate, 1),
         "most_used_strategy": most_used,
         "strategy_breakdown": strategy_counts
+    }
+
+
+@frappe.whitelist()
+def apply_scheduling_results(
+    scheduling_run: str,
+    result_ids: str = None
+) -> dict:
+    """
+    Apply scheduling recommendations to Job Cards.
+
+    This is called after user reviews the scheduling results and confirms
+    to apply the recommendations. User can apply all results or selected ones.
+
+    Args:
+        scheduling_run: APS Scheduling Run name
+        result_ids: Optional comma-separated list of APS Scheduling Result names
+                   to apply. If not provided, applies all pending results.
+
+    Returns:
+        dict: {
+            success: bool,
+            applied_count: int,
+            errors: list,
+            message: str
+        }
+    """
+    if not frappe.db.exists("APS Scheduling Run", scheduling_run):
+        frappe.throw(_("APS Scheduling Run {0} not found").format(scheduling_run))
+
+    # Get run status
+    run_status = frappe.db.get_value("APS Scheduling Run", scheduling_run, "run_status")
+    if run_status not in ["Pending Approval", "Applied"]:
+        frappe.throw(_("Cannot apply results for run with status: {0}. Run must be in 'Pending Approval' status.").format(run_status))
+
+    # Build filters for results to apply
+    filters = {
+        "scheduling_run": scheduling_run,
+        "is_applied": 0
+    }
+
+    # If specific result_ids provided, filter by them
+    if result_ids:
+        result_list = [r.strip() for r in result_ids.split(",") if r.strip()]
+        if result_list:
+            filters["name"] = ["in", result_list]
+
+    # Get results to apply
+    results = frappe.get_all(
+        "APS Scheduling Result",
+        filters=filters,
+        fields=["name", "job_card", "workstation", "planned_start_time", "planned_end_time", "operation"]
+    )
+
+    if not results:
+        return {
+            "success": True,
+            "applied_count": 0,
+            "errors": [],
+            "message": _("No pending results to apply")
+        }
+
+    applied_count = 0
+    errors = []
+
+    for result in results:
+        try:
+            # Update Job Card
+            job_card = frappe.get_doc("Job Card", result.job_card)
+
+            # Update expected dates
+            job_card.expected_start_date = result.planned_start_time
+            job_card.expected_end_date = result.planned_end_time
+
+            # Update workstation
+            if result.workstation:
+                job_card.workstation = result.workstation
+
+            # Calculate duration
+            duration_mins = 0
+            if result.planned_start_time and result.planned_end_time:
+                duration_mins = int((result.planned_end_time - result.planned_start_time).total_seconds() / 60)
+
+            # Update time logs if empty
+            if hasattr(job_card, "time_logs") and not job_card.time_logs:
+                job_card.append("time_logs", {
+                    "from_time": result.planned_start_time,
+                    "to_time": result.planned_end_time,
+                    "time_in_mins": duration_mins,
+                    "completed_qty": 0
+                })
+
+            job_card.flags.ignore_validate_update_after_submit = True
+            job_card.save(ignore_permissions=True)
+
+            # Mark result as applied
+            frappe.db.set_value(
+                "APS Scheduling Result",
+                result.name,
+                {
+                    "is_applied": 1,
+                    "applied_at": now_datetime()
+                },
+                update_modified=True
+            )
+
+            applied_count += 1
+
+        except Exception as e:
+            error_msg = f"Error applying {result.name} to {result.job_card}: {str(e)}"
+            errors.append(error_msg)
+            frappe.log_error(error_msg, "Apply Scheduling Result Error")
+
+    frappe.db.commit()
+
+    # Update scheduling run status
+    total_results = frappe.db.count("APS Scheduling Result", {"scheduling_run": scheduling_run})
+    applied_results = frappe.db.count("APS Scheduling Result", {"scheduling_run": scheduling_run, "is_applied": 1})
+
+    update_values = {
+        "applied_operations": applied_results,
+        "applied_at": now_datetime(),
+        "applied_by": frappe.session.user
+    }
+
+    # If all results applied, mark as Applied; otherwise keep as Pending Approval
+    if applied_results >= total_results:
+        update_values["run_status"] = "Applied"
+
+    frappe.db.set_value("APS Scheduling Run", scheduling_run, update_values, update_modified=True)
+
+    return {
+        "success": len(errors) == 0,
+        "applied_count": applied_count,
+        "total_results": total_results,
+        "applied_results": applied_results,
+        "errors": errors,
+        "message": _("{0} of {1} scheduling results applied to Job Cards").format(applied_count, len(results))
+    }
+
+
+@frappe.whitelist()
+def get_pending_results(scheduling_run: str) -> dict:
+    """
+    Get pending (not yet applied) scheduling results for review.
+
+    Args:
+        scheduling_run: APS Scheduling Run name
+
+    Returns:
+        dict with pending results and summary
+    """
+    if not frappe.db.exists("APS Scheduling Run", scheduling_run):
+        frappe.throw(_("APS Scheduling Run {0} not found").format(scheduling_run))
+
+    # Get run info
+    run = frappe.db.get_value(
+        "APS Scheduling Run",
+        scheduling_run,
+        ["run_status", "total_operations", "applied_operations", "solver_status", "makespan_minutes"],
+        as_dict=True
+    )
+
+    # Get all results
+    results = frappe.get_all(
+        "APS Scheduling Result",
+        filters={"scheduling_run": scheduling_run},
+        fields=[
+            "name", "job_card", "workstation", "operation",
+            "planned_start_time", "planned_end_time",
+            "is_applied", "is_late", "delay_reason"
+        ],
+        order_by="planned_start_time asc"
+    )
+
+    # Enrich with Job Card info
+    for r in results:
+        jc = frappe.db.get_value(
+            "Job Card",
+            r.job_card,
+            ["work_order", "production_item", "for_quantity"],
+            as_dict=True
+        )
+        if jc:
+            r["work_order"] = jc.work_order
+            r["production_item"] = jc.production_item
+            r["quantity"] = jc.for_quantity
+
+    pending_count = len([r for r in results if not r.is_applied])
+    applied_count = len([r for r in results if r.is_applied])
+    late_jobs_count = len([r for r in results if r.is_late])
+
+    return {
+        "success": True,
+        "scheduling_run": scheduling_run,
+        "run_status": run.run_status,
+        "solver_status": run.solver_status,
+        "makespan_minutes": run.makespan_minutes,
+        "results": results,
+        "summary": {
+            "total": len(results),
+            "pending": pending_count,
+            "applied": applied_count,
+            "late_jobs": late_jobs_count
+        }
     }

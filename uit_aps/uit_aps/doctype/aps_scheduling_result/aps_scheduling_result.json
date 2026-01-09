@@ -15,6 +15,8 @@
   "planned_end_time",
   "work_shift",
   "section_status",
+  "is_applied",
+  "applied_at",
   "is_late",
   "delay_reason",
   "section_meta",
@@ -83,6 +85,22 @@
    "fieldname": "section_status",
    "fieldtype": "Section Break",
    "label": "Schedule Status"
+  },
+  {
+   "default": "0",
+   "description": "\u0110\u00e1nh d\u1ea5u khuy\u1ebfn ngh\u1ecb \u0111\u00e3 \u0111\u01b0\u1ee3c \u00e1p d\u1ee5ng v\u00e0o Job Card",
+   "fieldname": "is_applied",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Applied",
+   "read_only": 1
+  },
+  {
+   "depends_on": "is_applied",
+   "fieldname": "applied_at",
+   "fieldtype": "Datetime",
+   "label": "Applied At",
+   "read_only": 1
   },
   {
    "default": "0",

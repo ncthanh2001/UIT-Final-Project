@@ -487,7 +487,7 @@ def update_job_schedule(job_id: str, start_time: str, end_time: str) -> Dict:
 def get_production_plans() -> List[str]:
     """
     Lay danh sach Production Plans de filter
-    
+
     Returns:
         list: Danh sach Production Plan names
     """
@@ -501,9 +501,242 @@ def get_production_plans() -> List[str]:
             order_by="modified desc",
             limit=100
         )
-        
+
         return [pp["name"] for pp in production_plans]
     except Exception as e:
         frappe.log_error(f"Error fetching production plans: {str(e)}", "GET_PRODUCTION_PLANS")
         return []
+
+
+@frappe.whitelist()
+def get_scheduling_runs_for_production_plan(production_plan: str) -> Dict:
+    """
+    Lay danh sach APS Scheduling Runs cho mot Production Plan
+
+    Args:
+        production_plan: Ten cua Production Plan
+
+    Returns:
+        dict: {
+            success: bool,
+            runs: list of scheduling runs,
+            latest_run: latest run with details
+        }
+    """
+    if not production_plan:
+        return {"success": False, "runs": [], "latest_run": None, "message": "Production Plan required"}
+
+    if not frappe.db.exists("Production Plan", production_plan):
+        return {"success": False, "runs": [], "latest_run": None, "message": f"Production Plan {production_plan} not found"}
+
+    # Lay tat ca scheduling runs cho production plan
+    runs = frappe.get_all(
+        "APS Scheduling Run",
+        filters={
+            "production_plan": production_plan
+        },
+        fields=[
+            "name",
+            "run_status",
+            "run_date",
+            "scheduling_strategy",
+            "scheduling_tier",
+            "total_job_cards",
+            "total_late_jobs",
+            "jobs_on_time",
+            "makespan_minutes",
+            "machine_utilization",
+            "solver_status",
+            "solve_time_seconds",
+            "total_operations",
+            "applied_operations",
+            "applied_at",
+            "applied_by",
+            # Baseline comparison fields
+            "baseline_makespan_minutes",
+            "baseline_late_jobs",
+            "baseline_total_tardiness",
+            "improvement_makespan_percent",
+            "improvement_late_jobs_percent",
+            "improvement_tardiness_percent",
+            "comparison_summary",
+            # Constraint fields
+            "constraint_machine_eligibility",
+            "constraint_precedence",
+            "constraint_no_overlap",
+            "constraint_working_hours",
+            "constraint_due_dates",
+            "constraint_setup_time"
+        ],
+        order_by="run_date desc"
+    )
+
+    # Lay latest run voi Pending Approval hoac Applied
+    latest_run = None
+    for run in runs:
+        if run.run_status in ["Pending Approval", "Applied", "Completed"]:
+            latest_run = run
+            break
+
+    # Neu khong co run nao Pending Approval/Applied, lay run moi nhat
+    if not latest_run and runs:
+        latest_run = runs[0]
+
+    # Neu co latest run, lay them thong tin chi tiet
+    if latest_run:
+        # Dem so results
+        result_counts = frappe.db.sql("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN is_applied = 1 THEN 1 ELSE 0 END) as applied,
+                SUM(CASE WHEN is_late = 1 THEN 1 ELSE 0 END) as late
+            FROM `tabAPS Scheduling Result`
+            WHERE scheduling_run = %s
+        """, (latest_run.name,), as_dict=True)
+
+        if result_counts:
+            latest_run["result_summary"] = result_counts[0]
+        else:
+            latest_run["result_summary"] = {"total": 0, "applied": 0, "late": 0}
+
+    return {
+        "success": True,
+        "runs": runs,
+        "latest_run": latest_run,
+        "production_plan": production_plan
+    }
+
+
+@frappe.whitelist()
+def get_scheduling_results_for_gantt(scheduling_run: str) -> Dict:
+    """
+    Lay APS Scheduling Results de hien thi preview tren Gantt Chart
+
+    Args:
+        scheduling_run: Ten cua APS Scheduling Run
+
+    Returns:
+        dict: Jobs data formatted for Gantt display
+    """
+    if not scheduling_run:
+        return {"success": False, "jobs": [], "message": "Scheduling Run required"}
+
+    if not frappe.db.exists("APS Scheduling Run", scheduling_run):
+        return {"success": False, "jobs": [], "message": f"Scheduling Run {scheduling_run} not found"}
+
+    # Lay scheduling run info
+    run_doc = frappe.db.get_value(
+        "APS Scheduling Run",
+        scheduling_run,
+        [
+            "name", "production_plan", "run_status", "scheduling_strategy",
+            "total_job_cards", "total_late_jobs", "jobs_on_time",
+            "makespan_minutes", "machine_utilization", "solver_status"
+        ],
+        as_dict=True
+    )
+
+    # Lay tat ca scheduling results
+    results = frappe.get_all(
+        "APS Scheduling Result",
+        filters={"scheduling_run": scheduling_run},
+        fields=[
+            "name",
+            "job_card",
+            "workstation",
+            "operation",
+            "planned_start_time",
+            "planned_end_time",
+            "is_applied",
+            "is_late",
+            "delay_reason"
+        ],
+        order_by="planned_start_time"
+    )
+
+    jobs = []
+    for result in results:
+        # Lay thong tin job card
+        job_card_info = frappe.db.get_value(
+            "Job Card",
+            result.job_card,
+            ["name", "work_order", "operation", "status", "production_item", "for_quantity"],
+            as_dict=True
+        )
+
+        if not job_card_info:
+            continue
+
+        # Tinh duration
+        duration_hours = 1  # Default
+        if result.planned_start_time and result.planned_end_time:
+            start = get_datetime(result.planned_start_time)
+            end = get_datetime(result.planned_end_time)
+            duration_hours = max((end - start).total_seconds() / 3600, 0.5)
+
+        # Tinh risk status
+        status = "late" if result.is_late else "ontime"
+
+        jobs.append({
+            "id": result.name,
+            "jobCode": job_card_info.work_order or "N/A",
+            "operation": result.operation or job_card_info.operation or "N/A",
+            "machine": result.workstation or "N/A",
+            "startTime": result.planned_start_time,
+            "endTime": result.planned_end_time,
+            "durationHours": round(duration_hours, 2),
+            "status": status,
+            "progress": get_job_progress(job_card_info),
+            "priority": "high" if result.is_late else "medium",
+            "jobCard": result.job_card,
+            "isApplied": result.is_applied,
+            "productionItem": job_card_info.production_item,
+            "quantity": job_card_info.for_quantity
+        })
+
+    # Lay workstations
+    workstations = get_workstations_data()
+
+    # KPI
+    kpi = {
+        "makespan": cint(run_doc.makespan_minutes or 0) // 60 // 24 or 1,  # Convert to days
+        "lateJobs": cint(run_doc.total_late_jobs or 0),
+        "avgUtilization": flt(run_doc.machine_utilization or 0),
+        "scheduleStability": 100 - (cint(run_doc.total_late_jobs or 0) / max(cint(run_doc.total_job_cards or 1), 1) * 100)
+    }
+
+    return {
+        "success": True,
+        "jobs": jobs,
+        "workstations": workstations,
+        "kpi": kpi,
+        "schedulingRun": {
+            "name": run_doc.name,
+            "status": run_doc.run_status,
+            "productionPlan": run_doc.production_plan,
+            "strategy": run_doc.scheduling_strategy,
+            "solverStatus": run_doc.solver_status,
+            "totalJobs": cint(run_doc.total_job_cards or 0),
+            "jobsOnTime": cint(run_doc.jobs_on_time or 0),
+            "lateJobs": cint(run_doc.total_late_jobs or 0)
+        }
+    }
+
+
+@frappe.whitelist()
+def apply_scheduling_to_gantt(scheduling_run: str) -> Dict:
+    """
+    Apply scheduling results to Job Cards from Gantt Chart UI
+
+    This is a wrapper that calls the scheduling_api.apply_scheduling_results
+
+    Args:
+        scheduling_run: Ten cua APS Scheduling Run
+
+    Returns:
+        dict: Result of apply operation
+    """
+    from uit_aps.scheduling.api.scheduling_api import apply_scheduling_results
+
+    return apply_scheduling_results(scheduling_run=scheduling_run)
 

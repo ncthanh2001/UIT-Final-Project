@@ -124,6 +124,42 @@ interface AIRecommendation {
   applied: boolean
 }
 
+interface SchedulingRun {
+  name: string
+  run_status: string
+  run_date: string
+  scheduling_strategy: string
+  scheduling_tier: string
+  total_job_cards: number
+  total_late_jobs: number
+  jobs_on_time: number
+  makespan_minutes: number
+  machine_utilization: number
+  solver_status: string
+  total_operations: number
+  applied_operations: number
+  result_summary?: {
+    total: number
+    applied: number
+    late: number
+  }
+  // Baseline comparison
+  baseline_makespan_minutes?: number
+  baseline_late_jobs?: number
+  baseline_total_tardiness?: number
+  improvement_makespan_percent?: number
+  improvement_late_jobs_percent?: number
+  improvement_tardiness_percent?: number
+  comparison_summary?: string
+  // Constraints info
+  constraint_machine_eligibility?: boolean
+  constraint_precedence?: boolean
+  constraint_no_overlap?: boolean
+  constraint_working_hours?: boolean
+  constraint_due_dates?: boolean
+  constraint_setup_time?: boolean
+}
+
 const jobs = ref<Job[]>([])
 const draggedJob = ref<string | null>(null)
 const dragStartX = ref(0)
@@ -132,6 +168,13 @@ const dragStartHour = ref(0)
 const viewMode = ref<ViewMode>("month")
 const aiApplied = ref(false)
 const chartRef = ref<HTMLDivElement | null>(null)
+
+// APS Scheduling Integration
+const schedulingRuns = ref<SchedulingRun[]>([])
+const latestSchedulingRun = ref<SchedulingRun | null>(null)
+const isPreviewMode = ref(false)
+const originalJobs = ref<Job[]>([])
+const applyingSchedule = ref(false)
 
 const viewModes: { key: ViewMode; label: string }[] = [
   { key: "quarterDay", label: "Quarter Day" },
@@ -242,17 +285,24 @@ const clearProductionPlanFilter = () => {
 watch(selectedProductionPlan, (newValue) => {
   // Update router query
   const query: any = { ...route.query }
-  
+
   if (newValue === "all") {
     delete query.production_plan
   } else {
     query.production_plan = newValue
   }
-  
+
   router.push({ query })
-  
+
+  // Reset preview mode
+  isPreviewMode.value = false
+  aiApplied.value = false
+
   // Reload data
   loadGanttData()
+
+  // Load scheduling runs for this production plan
+  loadSchedulingRuns(newValue)
 })
 
 const aiRecommendation: AIRecommendation = {
@@ -264,6 +314,130 @@ const aiRecommendation: AIRecommendation = {
   },
   confidence: 68,
   applied: false,
+}
+
+// Resource to load scheduling runs for production plan
+const schedulingRunsResource = createResource({
+  url: "uit_aps.scheduling.api.gantt_api.get_scheduling_runs_for_production_plan",
+  params: {
+    production_plan: ""
+  },
+  auto: false,
+  onSuccess(data: any) {
+    if (data.success) {
+      schedulingRuns.value = data.runs || []
+      latestSchedulingRun.value = data.latest_run || null
+      console.log("Scheduling runs loaded:", data)
+    }
+  },
+  onError(error: any) {
+    console.error("Error loading scheduling runs:", error)
+  }
+})
+
+// Resource to load scheduling results for preview
+const schedulingResultsResource = createResource({
+  url: "uit_aps.scheduling.api.gantt_api.get_scheduling_results_for_gantt",
+  params: {
+    scheduling_run: ""
+  },
+  auto: false,
+  onSuccess(data: any) {
+    if (data.success) {
+      console.log("Scheduling results loaded for preview:", data)
+      // Save original jobs for reset
+      if (!isPreviewMode.value) {
+        originalJobs.value = [...jobs.value]
+      }
+      // Convert and display preview jobs
+      const previewJobs = data.jobs.map((job: any) => convertJobToGanttFormat(job))
+      jobs.value = previewJobs
+      isPreviewMode.value = true
+      // Update KPI
+      kpiData.value = data.kpi
+      // Update scheduling run info
+      schedulingRunInfo.value = data.schedulingRun
+    }
+  },
+  onError(error: any) {
+    console.error("Error loading scheduling results:", error)
+  }
+})
+
+// Resource to apply scheduling results
+const applySchedulingResource = createResource({
+  url: "uit_aps.scheduling.api.gantt_api.apply_scheduling_to_gantt",
+  params: {
+    scheduling_run: ""
+  },
+  auto: false,
+  onSuccess(data: any) {
+    applyingSchedule.value = false
+    if (data.success) {
+      console.log("Scheduling applied successfully:", data)
+      aiApplied.value = true
+      isPreviewMode.value = false
+      // Reload gantt data to show applied times
+      loadGanttData()
+      // Reload scheduling runs to update status
+      if (selectedProductionPlan.value && selectedProductionPlan.value !== "all") {
+        loadSchedulingRuns(selectedProductionPlan.value)
+      }
+    }
+  },
+  onError(error: any) {
+    applyingSchedule.value = false
+    console.error("Error applying scheduling:", error)
+  }
+})
+
+// Load scheduling runs when production plan changes
+const loadSchedulingRuns = (productionPlan: string) => {
+  if (!productionPlan || productionPlan === "all") {
+    schedulingRuns.value = []
+    latestSchedulingRun.value = null
+    return
+  }
+
+  schedulingRunsResource.update({
+    params: { production_plan: productionPlan }
+  })
+  schedulingRunsResource.fetch()
+}
+
+// Preview APS scheduling results
+const handlePreviewScheduling = () => {
+  if (!latestSchedulingRun.value) return
+
+  schedulingResultsResource.update({
+    params: { scheduling_run: latestSchedulingRun.value.name }
+  })
+  schedulingResultsResource.fetch()
+}
+
+// Apply APS scheduling to Job Cards
+const handleApplyScheduling = () => {
+  if (!latestSchedulingRun.value) return
+
+  if (!confirm("Áp dụng khuyến nghị lịch trình vào Job Cards? Hành động này sẽ cập nhật thời gian dự kiến của các Job Card.")) {
+    return
+  }
+
+  applyingSchedule.value = true
+  applySchedulingResource.update({
+    params: { scheduling_run: latestSchedulingRun.value.name }
+  })
+  applySchedulingResource.fetch()
+}
+
+// Reset to original view (exit preview mode)
+const handleResetPreview = () => {
+  if (originalJobs.value.length > 0) {
+    jobs.value = [...originalJobs.value]
+  }
+  isPreviewMode.value = false
+  // Reload original data
+  loadGanttData()
 }
 
 const viewConfig = computed(() => {
@@ -371,6 +545,10 @@ const handleIgnoreAI = () => {
 
 onMounted(() => {
   loadGanttData()
+  // Load scheduling runs if production plan is set
+  if (route.query.production_plan) {
+    loadSchedulingRuns(route.query.production_plan as string)
+  }
 })
 
 const handleMouseDown = (event: MouseEvent, jobId: string, startDay: number, startHour: number) => {
@@ -804,7 +982,206 @@ const priorityLabels = {
       </div>
 
       <div class="w-72 flex-shrink-0 border-l border-border bg-card p-4">
-        <Card class="border-blue-200 bg-blue-50">
+        <!-- APS Scheduling Recommendation Card -->
+        <Card v-if="latestSchedulingRun" :class="cn(
+          'border-2',
+          latestSchedulingRun.run_status === 'Pending Approval' ? 'border-amber-300 bg-amber-50' :
+          latestSchedulingRun.run_status === 'Applied' ? 'border-green-300 bg-green-50' :
+          'border-blue-200 bg-blue-50'
+        )">
+          <CardHeader class="pb-2">
+            <CardTitle class="text-sm flex items-center gap-2 text-foreground">
+              <Zap class="h-4 w-4 text-primary" />
+              APS Scheduling
+              <Badge v-if="isPreviewMode" variant="outline" class="ml-auto text-[10px] bg-violet-100 text-violet-700 border-violet-300">
+                Preview Mode
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent class="space-y-3">
+            <!-- Scheduling Run Info -->
+            <div>
+              <p class="text-xs text-muted-foreground">Scheduling Run</p>
+              <p class="text-sm font-medium text-foreground truncate">{{ latestSchedulingRun.name }}</p>
+            </div>
+
+            <div>
+              <p class="text-xs text-muted-foreground">Status</p>
+              <Badge :class="cn(
+                'text-xs',
+                latestSchedulingRun.run_status === 'Pending Approval' ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                latestSchedulingRun.run_status === 'Applied' ? 'bg-green-100 text-green-800 border-green-300' :
+                latestSchedulingRun.run_status === 'Completed' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                'bg-gray-100 text-gray-800 border-gray-300'
+              )">
+                {{ latestSchedulingRun.run_status }}
+              </Badge>
+            </div>
+
+            <div>
+              <p class="text-xs text-muted-foreground">Strategy</p>
+              <p class="text-sm font-medium text-primary">{{ latestSchedulingRun.scheduling_strategy }}</p>
+            </div>
+
+            <!-- Metrics -->
+            <div>
+              <p class="text-xs text-muted-foreground mb-1">Kết quả tối ưu</p>
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-muted-foreground">Total Jobs</span>
+                  <span class="font-medium">{{ latestSchedulingRun.total_job_cards || 0 }}</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-muted-foreground">Jobs On Time</span>
+                  <span class="text-success font-medium">{{ latestSchedulingRun.jobs_on_time || 0 }}</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-muted-foreground">Late Jobs</span>
+                  <span :class="latestSchedulingRun.total_late_jobs > 0 ? 'text-destructive' : 'text-success'" class="font-medium">
+                    {{ latestSchedulingRun.total_late_jobs || 0 }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-muted-foreground">Makespan</span>
+                  <span class="font-medium">{{ Math.round((latestSchedulingRun.makespan_minutes || 0) / 60) }}h</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Utilization -->
+            <div v-if="latestSchedulingRun.machine_utilization">
+              <p class="text-xs text-muted-foreground mb-1">Machine Utilization</p>
+              <div class="flex items-center gap-2">
+                <Progress :value="latestSchedulingRun.machine_utilization" class="h-2 flex-1" />
+                <span class="text-sm font-medium text-foreground">{{ Math.round(latestSchedulingRun.machine_utilization) }}%</span>
+              </div>
+            </div>
+
+            <!-- Baseline Comparison -->
+            <div v-if="latestSchedulingRun.baseline_makespan_minutes" class="pt-2 border-t border-gray-200">
+              <p class="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                <TrendingUp class="h-3 w-3" />
+                So sánh với FIFO Baseline
+              </p>
+              <div class="space-y-1 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-muted-foreground">Makespan</span>
+                  <div class="flex items-center gap-1">
+                    <span class="text-muted-foreground line-through">{{ Math.round((latestSchedulingRun.baseline_makespan_minutes || 0) / 60) }}h</span>
+                    <span class="mx-1">→</span>
+                    <span class="font-medium">{{ Math.round((latestSchedulingRun.makespan_minutes || 0) / 60) }}h</span>
+                    <span :class="(latestSchedulingRun.improvement_makespan_percent || 0) > 0 ? 'text-green-600' : 'text-red-600'" class="font-medium ml-1">
+                      {{ (latestSchedulingRun.improvement_makespan_percent || 0) > 0 ? '↓' : '↑' }}{{ Math.abs(latestSchedulingRun.improvement_makespan_percent || 0).toFixed(1) }}%
+                    </span>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-muted-foreground">Late Jobs</span>
+                  <div class="flex items-center gap-1">
+                    <span class="text-muted-foreground line-through">{{ latestSchedulingRun.baseline_late_jobs || 0 }}</span>
+                    <span class="mx-1">→</span>
+                    <span class="font-medium">{{ latestSchedulingRun.total_late_jobs || 0 }}</span>
+                    <span v-if="(latestSchedulingRun.improvement_late_jobs_percent || 0) !== 0" :class="(latestSchedulingRun.improvement_late_jobs_percent || 0) > 0 ? 'text-green-600' : 'text-red-600'" class="font-medium ml-1">
+                      {{ (latestSchedulingRun.improvement_late_jobs_percent || 0) > 0 ? '↓' : '↑' }}{{ Math.abs(latestSchedulingRun.improvement_late_jobs_percent || 0).toFixed(1) }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div v-if="(latestSchedulingRun.improvement_makespan_percent || 0) > 0 || (latestSchedulingRun.improvement_late_jobs_percent || 0) > 0"
+                   class="mt-2 p-2 rounded bg-green-100 text-green-800 text-[10px]">
+                ✓ Lập lịch tối ưu hiệu quả hơn FIFO
+              </div>
+            </div>
+
+            <!-- Applied Status -->
+            <div v-if="latestSchedulingRun.result_summary">
+              <p class="text-xs text-muted-foreground mb-1">Trạng thái áp dụng</p>
+              <div class="flex items-center gap-2">
+                <Progress
+                  :value="latestSchedulingRun.result_summary.total > 0 ? (latestSchedulingRun.result_summary.applied / latestSchedulingRun.result_summary.total * 100) : 0"
+                  class="h-2 flex-1"
+                />
+                <span class="text-xs font-medium text-foreground">
+                  {{ latestSchedulingRun.result_summary.applied }}/{{ latestSchedulingRun.result_summary.total }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col gap-2 pt-2">
+              <!-- Preview Button -->
+              <Button
+                v-if="!isPreviewMode && latestSchedulingRun.run_status === 'Pending Approval'"
+                size="sm"
+                variant="outline"
+                class="w-full"
+                :disabled="schedulingResultsResource.loading"
+                @click="handlePreviewScheduling"
+              >
+                <template v-if="schedulingResultsResource.loading">
+                  <span class="animate-spin mr-2">⏳</span> Loading...
+                </template>
+                <template v-else>
+                  👁️ Xem trước lịch trình
+                </template>
+              </Button>
+
+              <!-- Apply Button -->
+              <Button
+                v-if="latestSchedulingRun.run_status === 'Pending Approval'"
+                size="sm"
+                class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                :disabled="applyingSchedule"
+                @click="handleApplyScheduling"
+              >
+                <template v-if="applyingSchedule">
+                  <span class="animate-spin mr-2">⏳</span> Đang áp dụng...
+                </template>
+                <template v-else>
+                  ✅ Áp dụng vào Job Cards
+                </template>
+              </Button>
+
+              <!-- Reset Preview Button -->
+              <Button
+                v-if="isPreviewMode"
+                size="sm"
+                variant="outline"
+                class="w-full"
+                @click="handleResetPreview"
+              >
+                🔄 Thoát xem trước
+              </Button>
+
+              <!-- Already Applied Badge -->
+              <div v-if="latestSchedulingRun.run_status === 'Applied'" class="text-center py-2">
+                <Badge class="bg-green-100 text-green-800 border-green-300">
+                  ✅ Đã áp dụng
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- Fallback: No Scheduling Run / Show old AI card -->
+        <Card v-else-if="selectedProductionPlan && selectedProductionPlan !== 'all'" class="border-gray-200 bg-gray-50">
+          <CardHeader class="pb-2">
+            <CardTitle class="text-sm flex items-center gap-2 text-muted-foreground">
+              <Zap class="h-4 w-4" />
+              APS Scheduling
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p class="text-xs text-muted-foreground text-center py-4">
+              Chưa có lịch trình APS cho Production Plan này.
+              <br /><br />
+              Hãy tạo APS Scheduling Run trong ERPNext để tối ưu hóa lịch sản xuất.
+            </p>
+          </CardContent>
+        </Card>
+
+        <!-- Original AI card when no production plan selected -->
+        <Card v-else class="border-blue-200 bg-blue-50">
           <CardHeader class="pb-2">
             <CardTitle class="text-sm flex items-center gap-2 text-foreground">
               <Zap class="h-4 w-4 text-primary" />

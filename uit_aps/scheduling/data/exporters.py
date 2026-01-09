@@ -19,7 +19,9 @@ from uit_aps.scheduling.ortools.models import (
     SchedulingSolution,
     ScheduledOperation,
     SolverStatus,
+    SchedulingConfig,
 )
+from uit_aps.scheduling.ortools.baseline import OptimizationComparison
 
 
 class SchedulingExporter:
@@ -39,16 +41,24 @@ class SchedulingExporter:
     def export_solution(
         self,
         solution: SchedulingSolution,
-        update_job_cards: bool = True,
-        create_results: bool = True
+        update_job_cards: bool = False,
+        create_results: bool = True,
+        baseline_comparison: OptimizationComparison = None,
+        config: SchedulingConfig = None
     ) -> dict:
         """
         Export complete solution to ERPNext.
 
+        IMPORTANT: By default, update_job_cards=False to allow user review
+        before applying recommendations. User must explicitly approve and
+        apply using the apply_scheduling_results API.
+
         Args:
             solution: SchedulingSolution from solver
-            update_job_cards: Whether to update Job Card scheduled times
+            update_job_cards: Whether to update Job Card scheduled times (default False)
             create_results: Whether to create APS Scheduling Result records
+            baseline_comparison: OptimizationComparison with baseline metrics
+            config: SchedulingConfig with constraint settings
 
         Returns:
             dict with export statistics
@@ -69,7 +79,7 @@ class SchedulingExporter:
                     stats["job_cards_updated"] += 1
 
                 if create_results and self.scheduling_run:
-                    self._create_scheduling_result(scheduled_op)
+                    self._create_scheduling_result(scheduled_op, is_applied=update_job_cards)
                     stats["results_created"] += 1
 
             except Exception as e:
@@ -79,9 +89,15 @@ class SchedulingExporter:
 
         frappe.db.commit()
 
-        # Update scheduling run with metrics
+        # Update scheduling run with metrics, constraints, and baseline comparison
         if self.scheduling_run:
-            self._update_scheduling_run(solution, stats)
+            self._update_scheduling_run(
+                solution,
+                stats,
+                applied=update_job_cards,
+                baseline_comparison=baseline_comparison,
+                config=config
+            )
 
         return stats
 
@@ -117,12 +133,13 @@ class SchedulingExporter:
         job_card.flags.ignore_validate_update_after_submit = True
         job_card.save(ignore_permissions=True)
 
-    def _create_scheduling_result(self, scheduled_op: ScheduledOperation) -> None:
+    def _create_scheduling_result(self, scheduled_op: ScheduledOperation, is_applied: bool = False) -> None:
         """
         Create APS Scheduling Result record.
 
         Args:
             scheduled_op: Scheduled operation data
+            is_applied: Whether this result has been applied to Job Card (default False)
         """
         # Check if result already exists
         existing = frappe.db.exists("APS Scheduling Result", {
@@ -138,6 +155,8 @@ class SchedulingExporter:
             result.planned_end_time = scheduled_op.end_time
             result.is_late = 1 if scheduled_op.is_late else 0
             result.delay_reason = f"Tardiness: {scheduled_op.tardiness_mins} mins" if scheduled_op.is_late else ""
+            result.is_applied = 1 if is_applied else 0
+            result.applied_at = now_datetime() if is_applied else None
             result.save(ignore_permissions=True)
         else:
             # Create new
@@ -150,30 +169,48 @@ class SchedulingExporter:
                 "planned_start_time": scheduled_op.start_time,
                 "planned_end_time": scheduled_op.end_time,
                 "is_late": 1 if scheduled_op.is_late else 0,
-                "delay_reason": f"Tardiness: {scheduled_op.tardiness_mins} mins" if scheduled_op.is_late else ""
+                "delay_reason": f"Tardiness: {scheduled_op.tardiness_mins} mins" if scheduled_op.is_late else "",
+                "is_applied": 1 if is_applied else 0,
+                "applied_at": now_datetime() if is_applied else None
             })
             result.insert(ignore_permissions=True)
 
     def _update_scheduling_run(
         self,
         solution: SchedulingSolution,
-        stats: dict
+        stats: dict,
+        applied: bool = False,
+        baseline_comparison: OptimizationComparison = None,
+        config: SchedulingConfig = None
     ) -> None:
         """
-        Update APS Scheduling Run with solution metrics.
+        Update APS Scheduling Run with solution metrics, constraints, and comparison.
 
         Uses db_set to avoid document version conflicts when the form is open.
 
         Args:
             solution: SchedulingSolution
             stats: Export statistics
+            applied: Whether results have been applied to Job Cards
+            baseline_comparison: OptimizationComparison with baseline metrics
+            config: SchedulingConfig with constraint settings
         """
         try:
+            # Determine run status based on feasibility and applied state
+            if not solution.is_feasible:
+                run_status = "Failed"
+            elif applied:
+                run_status = "Applied"
+            else:
+                run_status = "Pending Approval"
+
             # Use db_set to avoid version conflicts with open documents
             # This bypasses the document versioning system
             update_values = {
-                "run_status": "Completed" if solution.is_feasible else "Failed",
+                "run_status": run_status,
                 "total_job_cards": len(solution.operations),
+                "total_operations": len(solution.operations),
+                "applied_operations": stats["job_cards_updated"] if applied else 0,
                 "total_late_jobs": solution.jobs_late,
                 "jobs_on_time": solution.jobs_on_time,
                 "makespan_minutes": solution.makespan_mins,
@@ -182,6 +219,39 @@ class SchedulingExporter:
                 "machine_utilization": solution.average_utilization,
                 "gap_percentage": solution.gap_percentage
             }
+
+            # Add constraint information
+            update_values["constraint_machine_eligibility"] = 1  # Always applied
+            update_values["constraint_precedence"] = 1  # Always applied
+            update_values["constraint_no_overlap"] = 1  # Always applied
+            update_values["constraint_due_dates"] = 1  # Always applied
+
+            # Working hours constraint depends on config
+            if config:
+                update_values["constraint_working_hours"] = 0 if config.allow_overtime else 1
+                update_values["constraint_setup_time"] = 1 if config.min_gap_between_ops_mins > 0 else 0
+            else:
+                update_values["constraint_working_hours"] = 1
+                update_values["constraint_setup_time"] = 0
+
+            # Generate constraints description
+            constraints_desc = self._generate_constraints_description(config)
+            update_values["constraints_description"] = constraints_desc
+
+            # Add baseline comparison data
+            if baseline_comparison:
+                update_values["baseline_makespan_minutes"] = baseline_comparison.baseline_makespan_minutes
+                update_values["baseline_late_jobs"] = baseline_comparison.baseline_late_jobs
+                update_values["baseline_total_tardiness"] = baseline_comparison.baseline_total_tardiness
+                update_values["improvement_makespan_percent"] = round(baseline_comparison.improvement_makespan_percent, 2)
+                update_values["improvement_late_jobs_percent"] = round(baseline_comparison.improvement_late_jobs_percent, 2)
+                update_values["improvement_tardiness_percent"] = round(baseline_comparison.improvement_tardiness_percent, 2)
+                update_values["comparison_summary"] = baseline_comparison.summary
+
+            # Add applied info if applied
+            if applied:
+                update_values["applied_at"] = now_datetime()
+                update_values["applied_by"] = frappe.session.user
 
             # Add notes about errors if any
             if stats["errors"]:
@@ -203,6 +273,45 @@ class SchedulingExporter:
                 f"Failed to update scheduling run: {str(e)}",
                 "Scheduling Run Update Error"
             )
+
+    def _generate_constraints_description(self, config: SchedulingConfig = None) -> str:
+        """
+        Generate human-readable description of applied constraints.
+
+        Args:
+            config: SchedulingConfig with constraint settings
+
+        Returns:
+            Formatted description string
+        """
+        lines = [
+            "Các ràng buộc được áp dụng trong quá trình tối ưu hóa:",
+            "",
+            "1. Machine Eligibility (Phù hợp máy): Mỗi operation chỉ được lập lịch trên máy (workstation) có khả năng thực hiện operation đó.",
+            "",
+            "2. Operation Precedence (Thứ tự ưu tiên): Các operation trong cùng một Work Order phải được thực hiện theo đúng thứ tự quy định trong BOM.",
+            "",
+            "3. No Overlap (Không chồng lấn): Mỗi máy chỉ có thể xử lý một operation tại một thời điểm.",
+            "",
+            "4. Due Date Respect (Tôn trọng deadline): Ưu tiên tối ưu hóa để hoàn thành job trước deadline, giảm thiểu số job trễ và tổng thời gian trễ.",
+        ]
+
+        if config:
+            if not config.allow_overtime:
+                lines.append("")
+                lines.append("5. Working Hours (Giờ làm việc): Lập lịch trong giờ làm việc của workstation (nếu có cấu hình).")
+
+            if config.min_gap_between_ops_mins > 0:
+                lines.append("")
+                lines.append(f"6. Setup/Gap Time (Thời gian setup): Khoảng cách tối thiểu {config.min_gap_between_ops_mins} phút giữa các operation.")
+
+            lines.append("")
+            lines.append(f"Hàm mục tiêu: Minimize (Makespan × {config.objective_weights.makespan_weight} + Tardiness × {config.objective_weights.tardiness_weight})")
+        else:
+            lines.append("")
+            lines.append("Hàm mục tiêu: Minimize (Makespan + Tardiness)")
+
+        return "\n".join(lines)
 
 
 def export_to_gantt_data(solution: SchedulingSolution) -> List[dict]:

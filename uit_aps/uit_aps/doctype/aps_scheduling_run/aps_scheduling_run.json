@@ -14,6 +14,30 @@
   "scheduling_tier",
   "run_date",
   "executed_by",
+  "section_approval",
+  "total_operations",
+  "applied_operations",
+  "column_break_approval",
+  "applied_at",
+  "applied_by",
+  "section_constraints",
+  "constraint_machine_eligibility",
+  "constraint_precedence",
+  "constraint_no_overlap",
+  "column_break_constraints",
+  "constraint_working_hours",
+  "constraint_due_dates",
+  "constraint_setup_time",
+  "constraints_description",
+  "section_comparison",
+  "baseline_makespan_minutes",
+  "baseline_late_jobs",
+  "baseline_total_tardiness",
+  "column_break_comparison",
+  "improvement_makespan_percent",
+  "improvement_late_jobs_percent",
+  "improvement_tardiness_percent",
+  "comparison_summary",
   "section_solver_config",
   "time_limit_seconds",
   "min_gap_between_ops",
@@ -64,7 +88,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Run Status",
-   "options": "Pending\nRunning\nCompleted\nFailed",
+   "options": "Pending\nRunning\nPending Approval\nApplied\nCompleted\nFailed",
    "reqd": 1
   },
   {
@@ -98,6 +122,170 @@
    "fieldtype": "Link",
    "label": "Executed By",
    "options": "User"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.run_status=='Pending Approval' || doc.run_status=='Applied'",
+   "fieldname": "section_approval",
+   "fieldtype": "Section Break",
+   "label": "Approval Status"
+  },
+  {
+   "description": "T\u1ed5ng s\u1ed1 operations \u0111\u01b0\u1ee3c khuy\u1ebfn ngh\u1ecb",
+   "fieldname": "total_operations",
+   "fieldtype": "Int",
+   "label": "Total Operations",
+   "read_only": 1
+  },
+  {
+   "description": "S\u1ed1 operations \u0111\u00e3 \u00e1p d\u1ee5ng",
+   "fieldname": "applied_operations",
+   "fieldtype": "Int",
+   "label": "Applied Operations",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "applied_at",
+   "fieldtype": "Datetime",
+   "label": "Applied At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "applied_by",
+   "fieldtype": "Link",
+   "label": "Applied By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.run_status!='Pending'",
+   "fieldname": "section_constraints",
+   "fieldtype": "Section Break",
+   "label": "Scheduling Constraints Applied"
+  },
+  {
+   "default": "1",
+   "description": "Mỗi operation chỉ được lập lịch trên máy phù hợp với operation đó",
+   "fieldname": "constraint_machine_eligibility",
+   "fieldtype": "Check",
+   "label": "Machine Eligibility",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "description": "Các operation trong cùng Work Order phải thực hiện theo thứ tự quy định",
+   "fieldname": "constraint_precedence",
+   "fieldtype": "Check",
+   "label": "Operation Precedence",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "description": "Mỗi máy chỉ xử lý một operation tại một thời điểm",
+   "fieldname": "constraint_no_overlap",
+   "fieldtype": "Check",
+   "label": "No Overlap (Machine)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_constraints",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Lập lịch trong giờ làm việc của workstation (nếu có cấu hình)",
+   "fieldname": "constraint_working_hours",
+   "fieldtype": "Check",
+   "label": "Working Hours",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "description": "Ưu tiên hoàn thành trước deadline của Work Order/Sales Order",
+   "fieldname": "constraint_due_dates",
+   "fieldtype": "Check",
+   "label": "Due Date Respect",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Tính thời gian setup khi chuyển đổi sản phẩm trên máy",
+   "fieldname": "constraint_setup_time",
+   "fieldtype": "Check",
+   "label": "Setup Time",
+   "read_only": 1
+  },
+  {
+   "description": "Mô tả chi tiết các ràng buộc và điều kiện tối ưu hóa",
+   "fieldname": "constraints_description",
+   "fieldtype": "Small Text",
+   "label": "Constraints Description",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.run_status!='Pending'",
+   "fieldname": "section_comparison",
+   "fieldtype": "Section Break",
+   "label": "Optimization Comparison (vs FIFO Baseline)"
+  },
+  {
+   "description": "Makespan khi lập lịch theo FIFO (First In First Out)",
+   "fieldname": "baseline_makespan_minutes",
+   "fieldtype": "Int",
+   "label": "Baseline Makespan (mins)",
+   "read_only": 1
+  },
+  {
+   "description": "Số job trễ khi lập lịch theo FIFO",
+   "fieldname": "baseline_late_jobs",
+   "fieldtype": "Int",
+   "label": "Baseline Late Jobs",
+   "read_only": 1
+  },
+  {
+   "description": "Tổng độ trễ khi lập lịch theo FIFO",
+   "fieldname": "baseline_total_tardiness",
+   "fieldtype": "Int",
+   "label": "Baseline Tardiness (mins)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_comparison",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Phần trăm cải thiện makespan so với FIFO (số dương = tốt hơn)",
+   "fieldname": "improvement_makespan_percent",
+   "fieldtype": "Float",
+   "label": "Makespan Improvement (%)",
+   "read_only": 1
+  },
+  {
+   "description": "Phần trăm giảm số job trễ so với FIFO (số dương = tốt hơn)",
+   "fieldname": "improvement_late_jobs_percent",
+   "fieldtype": "Float",
+   "label": "Late Jobs Reduction (%)",
+   "read_only": 1
+  },
+  {
+   "description": "Phần trăm giảm tổng độ trễ so với FIFO (số dương = tốt hơn)",
+   "fieldname": "improvement_tardiness_percent",
+   "fieldtype": "Float",
+   "label": "Tardiness Reduction (%)",
+   "read_only": 1
+  },
+  {
+   "description": "Tóm tắt so sánh hiệu quả tối ưu hóa",
+   "fieldname": "comparison_summary",
+   "fieldtype": "Small Text",
+   "label": "Comparison Summary",
+   "read_only": 1
   },
   {
    "collapsible": 1,
