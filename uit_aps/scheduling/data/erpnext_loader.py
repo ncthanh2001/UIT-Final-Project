@@ -45,7 +45,9 @@ class ERPNextDataLoader:
     def load_from_production_plan(
         self,
         production_plan: str,
-        config: SchedulingConfig = None
+        config: SchedulingConfig = None,
+        exclude_workstations: List[str] = None,
+        exclude_job_cards: List[str] = None
     ) -> SchedulingProblem:
         """
         Load scheduling problem from ERPNext Production Plan.
@@ -56,12 +58,20 @@ class ERPNextDataLoader:
         Args:
             production_plan: Name of ERPNext Production Plan
             config: Scheduling configuration
+            exclude_workstations: List of workstation names to exclude (e.g., broken machines)
+            exclude_job_cards: List of Job Card names to exclude (e.g., already in progress)
 
         Returns:
             SchedulingProblem ready for solver
         """
         if config is None:
             config = SchedulingConfig()
+
+        if exclude_workstations is None:
+            exclude_workstations = []
+
+        if exclude_job_cards is None:
+            exclude_job_cards = []
 
         plan_doc = frappe.get_doc("Production Plan", production_plan)
 
@@ -102,12 +112,16 @@ class ERPNextDataLoader:
         # Convert Work Orders to Jobs
         for wo_name in work_orders:
             work_order = frappe.get_doc("Work Order", wo_name)
-            job = self._convert_work_order_to_job(work_order)
+            job = self._convert_work_order_to_job(
+                work_order,
+                exclude_workstations=exclude_workstations,
+                exclude_job_cards=exclude_job_cards
+            )
             if job and job.operations:
                 jobs.append(job)
 
-        # Load machines (workstations)
-        machines = self._load_workstations()
+        # Load machines (workstations) excluding broken ones
+        machines = self._load_workstations(exclude_workstations=exclude_workstations)
 
         return SchedulingProblem(
             jobs=jobs,
@@ -167,7 +181,9 @@ class ERPNextDataLoader:
     def _convert_work_order_to_job(
         self,
         work_order,
-        plan_item=None
+        plan_item=None,
+        exclude_workstations: List[str] = None,
+        exclude_job_cards: List[str] = None
     ) -> Optional[Job]:
         """
         Convert ERPNext Work Order to scheduling Job.
@@ -175,10 +191,17 @@ class ERPNextDataLoader:
         Args:
             work_order: Work Order document
             plan_item: Optional APS Production Plan Item for additional context
+            exclude_workstations: List of workstation names to exclude
+            exclude_job_cards: List of Job Card names to exclude
 
         Returns:
             Job object or None
         """
+        if exclude_workstations is None:
+            exclude_workstations = []
+        if exclude_job_cards is None:
+            exclude_job_cards = []
+
         operations = []
 
         # Get Job Cards for this Work Order
@@ -186,13 +209,19 @@ class ERPNextDataLoader:
         # - time_required: Expected time (in mins) - this is what we need for scheduling
         # - total_time_in_mins: Actual time logged (calculated from time_logs)
         # - sequence_id: Operation sequence
+        job_card_filters = {
+            "work_order": work_order.name,
+            "docstatus": ["<", 2],
+            "status": ["not in", ["Completed", "Cancelled"]]
+        }
+
+        # Exclude specific job cards if provided
+        if exclude_job_cards:
+            job_card_filters["name"] = ["not in", exclude_job_cards]
+
         job_cards = frappe.get_all(
             "Job Card",
-            filters={
-                "work_order": work_order.name,
-                "docstatus": ["<", 2],
-                "status": ["not in", ["Completed", "Cancelled"]]
-            },
+            filters=job_card_filters,
             fields=["name", "operation", "workstation", "workstation_type",
                     "for_quantity", "time_required", "sequence_id"],
             order_by="sequence_id asc, name asc"
@@ -209,10 +238,11 @@ class ERPNextDataLoader:
                 wo_op_times[op.operation] = cint(op.time_in_mins) or 60
 
         for idx, jc in enumerate(job_cards):
-            # Get eligible machines for this operation
+            # Get eligible machines for this operation (excluding broken ones)
             eligible_machines = self._get_eligible_machines(
                 jc.get("workstation"),
-                jc.get("workstation_type")
+                jc.get("workstation_type"),
+                exclude_workstations=exclude_workstations
             )
 
             if not eligible_machines:
@@ -330,7 +360,8 @@ class ERPNextDataLoader:
     def _get_eligible_machines(
         self,
         workstation: str = None,
-        workstation_type: str = None
+        workstation_type: str = None,
+        exclude_workstations: List[str] = None
     ) -> List[str]:
         """
         Get list of eligible machine IDs for an operation.
@@ -338,48 +369,76 @@ class ERPNextDataLoader:
         Args:
             workstation: Specific workstation name
             workstation_type: Type of workstation
+            exclude_workstations: List of workstation names to exclude (e.g., broken machines)
 
         Returns:
             List of workstation names
         """
+        if exclude_workstations is None:
+            exclude_workstations = []
+
         if workstation:
-            # Check if workstation exists and is available (status != "Off")
-            if frappe.db.exists("Workstation", {"name": workstation, "status": ["!=", "Off"]}):
-                return [workstation]
+            # Check if workstation exists, is available, and not excluded
+            if workstation not in exclude_workstations:
+                if frappe.db.exists("Workstation", {"name": workstation, "status": ["!=", "Off"]}):
+                    return [workstation]
+
+            # If primary workstation is excluded, try to find alternatives of same type
+            ws_type = frappe.db.get_value("Workstation", workstation, "workstation_type")
+            if ws_type:
+                workstation_type = ws_type
 
         if workstation_type:
-            # Get all workstations of this type that are available
+            # Get all workstations of this type that are available and not excluded
+            filters = {
+                "workstation_type": workstation_type,
+                "status": ["!=", "Off"]
+            }
+            if exclude_workstations:
+                filters["name"] = ["not in", exclude_workstations]
+
             machines = frappe.get_all(
                 "Workstation",
-                filters={
-                    "workstation_type": workstation_type,
-                    "status": ["!=", "Off"]
-                },
+                filters=filters,
                 pluck="name"
             )
             if machines:
                 return machines
 
-        # Fallback: return all available workstations (status != "Off")
+        # Fallback: return all available workstations (status != "Off") excluding broken ones
+        filters = {"status": ["!=", "Off"]}
+        if exclude_workstations:
+            filters["name"] = ["not in", exclude_workstations]
+
         return frappe.get_all(
             "Workstation",
-            filters={"status": ["!=", "Off"]},
+            filters=filters,
             pluck="name"
         ) or []
 
-    def _load_workstations(self) -> List[Machine]:
+    def _load_workstations(self, exclude_workstations: List[str] = None) -> List[Machine]:
         """
         Load all workstations as machines.
+
+        Args:
+            exclude_workstations: List of workstation names to exclude (e.g., broken machines)
 
         Returns:
             List of Machine objects
         """
+        if exclude_workstations is None:
+            exclude_workstations = []
+
         # ERPNext Workstation uses status field instead of disabled
         # Available statuses: Production, Off, Idle, Problem, Maintenance, Setup
-        # We exclude "Off" status workstations
+        # We exclude "Off" status workstations and any explicitly excluded ones
+        filters = {"status": ["!=", "Off"]}
+        if exclude_workstations:
+            filters["name"] = ["not in", exclude_workstations]
+
         workstations = frappe.get_all(
             "Workstation",
-            filters={"status": ["!=", "Off"]},
+            filters=filters,
             fields=["name", "workstation_name", "workstation_type",
                     "production_capacity", "holiday_list", "status"]
         )

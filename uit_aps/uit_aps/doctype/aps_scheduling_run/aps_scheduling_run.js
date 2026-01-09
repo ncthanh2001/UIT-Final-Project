@@ -201,6 +201,21 @@ $.extend(cur_frm, {
             frm.add_custom_button(__("View Optimization Analysis"), function() {
                 frm.show_optimization_analysis();
             }, __("Utilities"));
+
+            frm.add_custom_button(__("Export Excel Report"), function() {
+                frm.export_excel_report();
+            }, __("Reports"));
+        }
+
+        // Reschedule buttons (available after first run)
+        if (frm.doc.run_status === "Completed" || frm.doc.run_status === "Pending Approval" || frm.doc.run_status === "Applied") {
+            frm.add_custom_button(__("Reschedule (Machine Breakdown)"), function() {
+                frm.show_reschedule_dialog();
+            }, __("Reschedule"));
+
+            frm.add_custom_button(__("Simulate Breakdown"), function() {
+                frm.show_simulate_breakdown_dialog();
+            }, __("Reschedule"));
         }
     },
 
@@ -2011,5 +2026,360 @@ $.extend(cur_frm, {
                 }
             }
         });
+    },
+
+    // ============================================
+    // REPORTS: Export Methods
+    // ============================================
+    export_excel_report: function() {
+        let frm = this;
+
+        frappe.call({
+            method: "uit_aps.scheduling.reports.report_api.export_comparison_excel",
+            args: {
+                scheduling_run: frm.doc.name
+            },
+            freeze: true,
+            freeze_message: __("Generating Excel report..."),
+            callback: function(r) {
+                if (r.message && r.message.success) {
+                    frappe.show_alert({
+                        message: __("Excel report generated successfully!"),
+                        indicator: "green"
+                    });
+
+                    // Download the file
+                    window.open(r.message.file_url, "_blank");
+                } else {
+                    frappe.msgprint({
+                        title: __("Export Failed"),
+                        message: r.message ? r.message.error : __("Failed to generate Excel report"),
+                        indicator: "red"
+                    });
+                }
+            },
+            error: function() {
+                frappe.msgprint({
+                    title: __("Error"),
+                    message: __("Failed to generate Excel report. Make sure xlsxwriter is installed."),
+                    indicator: "red"
+                });
+            }
+        });
+    },
+
+    // ============================================
+    // RESCHEDULE: Machine Breakdown Methods
+    // ============================================
+    show_reschedule_dialog: function() {
+        let frm = this;
+
+        let d = new frappe.ui.Dialog({
+            title: __("Reschedule on Machine Breakdown"),
+            fields: [
+                {
+                    label: __("Broken Workstations"),
+                    fieldname: "broken_workstations",
+                    fieldtype: "MultiSelectList",
+                    get_data: function(txt) {
+                        return frappe.db.get_link_options("Workstation", txt, {
+                            status: ["!=", "Off"]
+                        });
+                    },
+                    description: __("Select workstations that are broken or unavailable")
+                },
+                {
+                    fieldtype: "Section Break",
+                    label: __("Exclude Job Cards")
+                },
+                {
+                    label: __("Exclude Completed/In-Progress Job Cards"),
+                    fieldname: "exclude_job_cards",
+                    fieldtype: "MultiSelectList",
+                    get_data: function(txt) {
+                        return frappe.db.get_link_options("Job Card", txt, {
+                            status: ["in", ["Work In Progress", "Completed"]]
+                        });
+                    },
+                    description: __("Job Cards that should not be rescheduled (already started or completed)")
+                },
+                {
+                    fieldtype: "Section Break",
+                    label: __("Solver Settings")
+                },
+                {
+                    label: __("Time Limit (seconds)"),
+                    fieldname: "time_limit_seconds",
+                    fieldtype: "Int",
+                    default: frm.doc.time_limit_seconds || 300
+                },
+                {
+                    label: __("Makespan Weight"),
+                    fieldname: "makespan_weight",
+                    fieldtype: "Float",
+                    default: frm.doc.makespan_weight || 1.0
+                },
+                {
+                    label: __("Tardiness Weight"),
+                    fieldname: "tardiness_weight",
+                    fieldtype: "Float",
+                    default: frm.doc.tardiness_weight || 10.0
+                }
+            ],
+            primary_action_label: __("Reschedule"),
+            primary_action: function(values) {
+                d.hide();
+
+                let broken_ws = values.broken_workstations ? values.broken_workstations.join(",") : "";
+                let exclude_jc = values.exclude_job_cards ? values.exclude_job_cards.join(",") : "";
+
+                frappe.call({
+                    method: "uit_aps.scheduling.api.scheduling_api.reschedule_on_breakdown",
+                    args: {
+                        scheduling_run: frm.doc.name,
+                        broken_workstations: broken_ws,
+                        exclude_job_cards: exclude_jc,
+                        time_limit_seconds: values.time_limit_seconds,
+                        makespan_weight: values.makespan_weight,
+                        tardiness_weight: values.tardiness_weight
+                    },
+                    freeze: true,
+                    freeze_message: __("Rescheduling with workstation exclusions..."),
+                    callback: function(r) {
+                        if (r.message && r.message.success) {
+                            frappe.show_alert({
+                                message: __("Rescheduling completed! New schedule: {0}", [r.message.scheduling_run]),
+                                indicator: "green"
+                            });
+
+                            // Show comparison
+                            if (r.message.comparison_with_previous) {
+                                let comp = r.message.comparison_with_previous;
+                                let html = `
+                                    <div class="reschedule-result">
+                                        <h5>${__("Comparison with Previous Schedule")}</h5>
+                                        <table class="table table-bordered">
+                                            <tr>
+                                                <td><strong>${__("Makespan")}</strong></td>
+                                                <td>${comp.previous_makespan || 0} → ${comp.new_makespan || 0} ${__("mins")}</td>
+                                                <td class="${comp.makespan_change <= 0 ? 'text-success' : 'text-danger'}">
+                                                    ${comp.makespan_change > 0 ? '+' : ''}${comp.makespan_change} ${__("mins")}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>${__("Late Jobs")}</strong></td>
+                                                <td>${comp.previous_late_jobs || 0} → ${comp.new_late_jobs || 0}</td>
+                                                <td class="${comp.late_jobs_change <= 0 ? 'text-success' : 'text-danger'}">
+                                                    ${comp.late_jobs_change > 0 ? '+' : ''}${comp.late_jobs_change}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <a href="/app/aps-scheduling-run/${r.message.scheduling_run}" class="btn btn-primary btn-sm">
+                                            ${__("View New Schedule")}
+                                        </a>
+                                    </div>
+                                `;
+                                frappe.msgprint({
+                                    title: __("Reschedule Complete"),
+                                    message: html,
+                                    indicator: "green"
+                                });
+                            }
+                        } else {
+                            frappe.msgprint({
+                                title: __("Reschedule Failed"),
+                                message: r.message ? r.message.error || r.message.message : __("Unknown error"),
+                                indicator: "red"
+                            });
+                        }
+                    },
+                    error: function() {
+                        frappe.msgprint({
+                            title: __("Error"),
+                            message: __("Failed to reschedule"),
+                            indicator: "red"
+                        });
+                    }
+                });
+            }
+        });
+        d.show();
+    },
+
+    show_simulate_breakdown_dialog: function() {
+        let frm = this;
+
+        let d = new frappe.ui.Dialog({
+            title: __("Simulate Machine Breakdown"),
+            fields: [
+                {
+                    label: __("Workstation"),
+                    fieldname: "workstation",
+                    fieldtype: "Link",
+                    options: "Workstation",
+                    reqd: 1,
+                    get_query: function() {
+                        return {
+                            filters: {
+                                status: ["!=", "Off"]
+                            }
+                        };
+                    },
+                    description: __("Select workstation to simulate breakdown")
+                }
+            ],
+            primary_action_label: __("Simulate"),
+            primary_action: function(values) {
+                d.hide();
+
+                frappe.call({
+                    method: "uit_aps.scheduling.api.scheduling_api.simulate_breakdown_scenario",
+                    args: {
+                        workstation: values.workstation,
+                        production_plan: frm.doc.production_plan
+                    },
+                    freeze: true,
+                    freeze_message: __("Simulating breakdown..."),
+                    callback: function(r) {
+                        if (r.message && r.message.success) {
+                            let data = r.message;
+                            let impact = data.impact_analysis || {};
+
+                            let html = `
+                                <div class="simulation-result">
+                                    <div class="alert alert-warning">
+                                        <strong>${__("Simulated Breakdown")}</strong>: ${data.workstation_name} (${data.workstation})
+                                        <br>${__("Current Status")}: ${data.current_status}
+                                    </div>
+
+                                    <h5>${__("Impact Analysis")}</h5>
+                                    <div class="row mb-3">
+                                        <div class="col-sm-4">
+                                            <div class="stat-card text-center p-2 border rounded">
+                                                <h3 class="text-danger">${impact.affected_job_cards || 0}</h3>
+                                                <small>${__("Affected Job Cards")}</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="stat-card text-center p-2 border rounded">
+                                                <h3 class="text-warning">${impact.total_duration_hours || 0}h</h3>
+                                                <small>${__("Total Duration")}</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <div class="stat-card text-center p-2 border rounded">
+                                                <h3 class="text-info">${data.alternative_workstations?.length || 0}</h3>
+                                                <small>${__("Alternatives")}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                            `;
+
+                            if (data.alternative_workstations && data.alternative_workstations.length > 0) {
+                                html += `<h5>${__("Alternative Workstations")}</h5><ul>`;
+                                data.alternative_workstations.forEach(ws => {
+                                    html += `<li><strong>${ws.name}</strong>: ${ws.workstation_name} (Capacity: ${ws.production_capacity})</li>`;
+                                });
+                                html += `</ul>`;
+                            }
+
+                            html += `
+                                    <div class="alert alert-info mt-3">
+                                        <strong>${__("Recommendation")}:</strong> ${data.recommendation}
+                                    </div>
+                                </div>
+                            `;
+
+                            let simDialog = new frappe.ui.Dialog({
+                                title: __("Breakdown Impact Analysis"),
+                                fields: [
+                                    {
+                                        fieldtype: "HTML",
+                                        fieldname: "result_html",
+                                        options: html
+                                    }
+                                ],
+                                primary_action_label: __("Proceed to Reschedule"),
+                                primary_action: function() {
+                                    simDialog.hide();
+                                    // Pre-fill reschedule dialog with this workstation
+                                    frm.show_reschedule_dialog_with_workstation(values.workstation);
+                                },
+                                secondary_action_label: __("Close")
+                            });
+                            simDialog.show();
+                            simDialog.$wrapper.find(".modal-dialog").css("max-width", "700px");
+
+                        } else {
+                            frappe.msgprint({
+                                title: __("Simulation Failed"),
+                                message: r.message ? r.message.error : __("Unknown error"),
+                                indicator: "red"
+                            });
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
+    },
+
+    show_reschedule_dialog_with_workstation: function(workstation) {
+        let frm = this;
+
+        let d = new frappe.ui.Dialog({
+            title: __("Reschedule - Exclude {0}", [workstation]),
+            fields: [
+                {
+                    label: __("Broken Workstations"),
+                    fieldname: "broken_workstations",
+                    fieldtype: "Data",
+                    default: workstation,
+                    read_only: 1,
+                    description: __("Workstation to exclude from scheduling")
+                },
+                {
+                    fieldtype: "Section Break",
+                    label: __("Solver Settings")
+                },
+                {
+                    label: __("Time Limit (seconds)"),
+                    fieldname: "time_limit_seconds",
+                    fieldtype: "Int",
+                    default: frm.doc.time_limit_seconds || 300
+                }
+            ],
+            primary_action_label: __("Reschedule Now"),
+            primary_action: function(values) {
+                d.hide();
+
+                frappe.call({
+                    method: "uit_aps.scheduling.api.scheduling_api.reschedule_on_breakdown",
+                    args: {
+                        scheduling_run: frm.doc.name,
+                        broken_workstations: values.broken_workstations,
+                        time_limit_seconds: values.time_limit_seconds
+                    },
+                    freeze: true,
+                    freeze_message: __("Rescheduling..."),
+                    callback: function(r) {
+                        if (r.message && r.message.success) {
+                            frappe.show_alert({
+                                message: __("Reschedule complete! New run: {0}", [r.message.scheduling_run]),
+                                indicator: "green"
+                            });
+                            frappe.set_route("Form", "APS Scheduling Run", r.message.scheduling_run);
+                        } else {
+                            frappe.msgprint({
+                                title: __("Failed"),
+                                message: r.message ? r.message.error : __("Unknown error"),
+                                indicator: "red"
+                            });
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
     }
 });

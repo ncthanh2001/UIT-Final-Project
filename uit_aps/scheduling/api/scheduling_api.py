@@ -679,3 +679,326 @@ def get_pending_results(scheduling_run: str) -> dict:
             "late_jobs": late_jobs_count
         }
     }
+
+
+@frappe.whitelist()
+def reschedule_on_breakdown(
+    production_plan: str = None,
+    scheduling_run: str = None,
+    broken_workstations: str = None,
+    exclude_job_cards: str = None,
+    time_limit_seconds: int = 300,
+    makespan_weight: float = 1.0,
+    tardiness_weight: float = 10.0
+) -> dict:
+    """
+    Reschedule when machines break down.
+
+    Creates a new scheduling run excluding broken workstations and
+    optionally excluding already completed/in-progress job cards.
+
+    Args:
+        production_plan: Production Plan to reschedule
+        scheduling_run: Existing scheduling run to base the reschedule on
+        broken_workstations: Comma-separated list of broken workstation names
+        exclude_job_cards: Comma-separated list of Job Card names to exclude (already in progress)
+        time_limit_seconds: Solver time limit
+        makespan_weight: Weight for makespan objective
+        tardiness_weight: Weight for tardiness objective
+
+    Returns:
+        dict with new scheduling run info and comparison to previous schedule
+    """
+    from uit_aps.scheduling.ortools.models import SchedulingConfig, ObjectiveWeights
+    from uit_aps.scheduling.ortools.scheduler import ORToolsScheduler
+    from uit_aps.scheduling.ortools.baseline import compute_baseline_comparison
+    from uit_aps.scheduling.data.erpnext_loader import ERPNextDataLoader
+    from uit_aps.scheduling.data.exporters import SchedulingExporter
+
+    # Parse broken workstations
+    broken_ws_list = []
+    if broken_workstations:
+        broken_ws_list = [ws.strip() for ws in broken_workstations.split(",") if ws.strip()]
+
+    # Parse excluded job cards
+    excluded_jc_list = []
+    if exclude_job_cards:
+        excluded_jc_list = [jc.strip() for jc in exclude_job_cards.split(",") if jc.strip()]
+
+    # Get production plan from existing run if not provided
+    if scheduling_run and not production_plan:
+        production_plan = frappe.db.get_value("APS Scheduling Run", scheduling_run, "production_plan")
+
+    if not production_plan:
+        frappe.throw(_("Production Plan is required for rescheduling"))
+
+    # Get previous run metrics for comparison
+    previous_metrics = None
+    if scheduling_run:
+        previous_metrics = frappe.db.get_value(
+            "APS Scheduling Run",
+            scheduling_run,
+            ["makespan_minutes", "total_late_jobs", "jobs_on_time", "machine_utilization"],
+            as_dict=True
+        )
+
+    try:
+        # Mark broken workstations in database
+        for ws in broken_ws_list:
+            if frappe.db.exists("Workstation", ws):
+                frappe.db.set_value("Workstation", ws, "status", "Maintenance")
+
+        # Create new scheduling run for reschedule
+        new_run = frappe.get_doc({
+            "doctype": "APS Scheduling Run",
+            "production_plan": production_plan,
+            "scheduling_strategy": "Forward Scheduling",
+            "scheduling_tier": "Tier 1 - OR-Tools",
+            "run_status": "Running",
+            "run_date": now_datetime(),
+            "executed_by": frappe.session.user,
+            "time_limit_seconds": time_limit_seconds,
+            "makespan_weight": makespan_weight,
+            "tardiness_weight": tardiness_weight,
+            "notes": f"Reschedule due to breakdown. Excluded workstations: {', '.join(broken_ws_list) or 'None'}. Excluded Job Cards: {', '.join(excluded_jc_list) or 'None'}"
+        })
+        new_run.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # Configure scheduler
+        config = SchedulingConfig(
+            time_limit_seconds=cint(time_limit_seconds) or 300,
+            objective_weights=ObjectiveWeights(
+                makespan_weight=flt(makespan_weight) or 1.0,
+                tardiness_weight=flt(tardiness_weight) or 10.0
+            ),
+            allow_overtime=False
+        )
+
+        # Load data with exclusions
+        loader = ERPNextDataLoader()
+        problem = loader.load_from_production_plan(
+            production_plan,
+            config,
+            exclude_workstations=broken_ws_list,
+            exclude_job_cards=excluded_jc_list
+        )
+
+        if not problem.jobs:
+            frappe.db.set_value("APS Scheduling Run", new_run.name, {
+                "run_status": "Failed",
+                "notes": "No jobs found to reschedule after exclusions"
+            })
+            return {
+                "success": False,
+                "error": "No jobs found to reschedule",
+                "scheduling_run": new_run.name
+            }
+
+        # Run scheduler
+        scheduler = ORToolsScheduler(config)
+        scheduler.load_data(problem)
+        scheduler.build_model()
+        solution = scheduler.solve(cint(time_limit_seconds))
+
+        # Compute baseline comparison
+        baseline_comparison = None
+        if solution.is_feasible:
+            try:
+                baseline_comparison = compute_baseline_comparison(
+                    problem=problem,
+                    optimized_solution=solution,
+                    baseline_algorithm="FIFO"
+                )
+            except Exception as e:
+                frappe.log_error(f"Baseline comparison error: {str(e)}", "Reschedule Baseline Error")
+
+        # Export results
+        exporter = SchedulingExporter(scheduling_run=new_run.name)
+        export_stats = exporter.export_solution(
+            solution,
+            update_job_cards=False,
+            create_results=True,
+            baseline_comparison=baseline_comparison,
+            config=config
+        )
+
+        # Build response with comparison to previous run
+        result = {
+            "success": solution.is_feasible,
+            "scheduling_run": new_run.name,
+            "status": solution.status.value,
+            "makespan_minutes": solution.makespan_mins,
+            "total_operations": len(solution.operations),
+            "jobs_on_time": solution.jobs_on_time,
+            "jobs_late": solution.jobs_late,
+            "solve_time_seconds": round(solution.solve_time_secs, 2),
+            "broken_workstations": broken_ws_list,
+            "excluded_job_cards": excluded_jc_list,
+            "message": _("Reschedule completed successfully") if solution.is_feasible else _("No feasible solution found")
+        }
+
+        # Compare with previous run
+        if previous_metrics:
+            result["comparison_with_previous"] = {
+                "previous_makespan": previous_metrics.makespan_minutes,
+                "new_makespan": solution.makespan_mins,
+                "makespan_change": solution.makespan_mins - (previous_metrics.makespan_minutes or 0),
+                "previous_late_jobs": previous_metrics.total_late_jobs,
+                "new_late_jobs": solution.jobs_late,
+                "late_jobs_change": solution.jobs_late - (previous_metrics.total_late_jobs or 0),
+            }
+
+        return result
+
+    except Exception as e:
+        # Update new run with error if it was created
+        if 'new_run' in locals() and new_run:
+            frappe.db.set_value("APS Scheduling Run", new_run.name, {
+                "run_status": "Failed",
+                "notes": str(e)[:500]
+            })
+            frappe.db.commit()
+
+        frappe.log_error(str(e), "Reschedule on Breakdown Error")
+        raise
+
+
+@frappe.whitelist()
+def get_affected_operations(workstations: str) -> dict:
+    """
+    Get operations affected by workstation breakdown.
+
+    Args:
+        workstations: Comma-separated list of workstation names
+
+    Returns:
+        dict with affected job cards and operations
+    """
+    ws_list = [ws.strip() for ws in workstations.split(",") if ws.strip()]
+
+    if not ws_list:
+        return {"success": False, "error": "No workstations specified"}
+
+    # Get job cards scheduled on these workstations that are not yet completed
+    affected_jc = frappe.get_all(
+        "Job Card",
+        filters={
+            "workstation": ["in", ws_list],
+            "status": ["in", ["Open", "Work In Progress", "Submitted"]]
+        },
+        fields=[
+            "name", "work_order", "operation", "workstation",
+            "production_item", "for_quantity", "status",
+            "expected_start_date", "expected_end_date"
+        ],
+        order_by="expected_start_date asc"
+    )
+
+    # Get scheduling results for these job cards
+    affected_results = []
+    if affected_jc:
+        jc_names = [jc.name for jc in affected_jc]
+        affected_results = frappe.get_all(
+            "APS Scheduling Result",
+            filters={
+                "job_card": ["in", jc_names],
+                "is_applied": 0
+            },
+            fields=["name", "scheduling_run", "job_card", "planned_start_time", "planned_end_time"]
+        )
+
+    return {
+        "success": True,
+        "workstations": ws_list,
+        "affected_job_cards": affected_jc,
+        "affected_count": len(affected_jc),
+        "pending_scheduling_results": affected_results,
+        "recommendation": _("Consider rescheduling using reschedule_on_breakdown API with these workstations excluded")
+    }
+
+
+@frappe.whitelist()
+def simulate_breakdown_scenario(
+    workstation: str,
+    production_plan: str = None
+) -> dict:
+    """
+    Simulate machine breakdown and show impact analysis.
+
+    Does NOT actually mark the workstation as broken - just shows
+    what would happen if it breaks down.
+
+    Args:
+        workstation: Workstation to simulate breakdown for
+        production_plan: Optional filter by production plan
+
+    Returns:
+        dict with impact analysis
+    """
+    if not frappe.db.exists("Workstation", workstation):
+        return {"success": False, "error": _("Workstation '{0}' not found").format(workstation)}
+
+    # Get workstation info
+    ws_doc = frappe.get_doc("Workstation", workstation)
+
+    # Build filters
+    jc_filters = {
+        "workstation": workstation,
+        "status": ["in", ["Open", "Work In Progress", "Submitted"]]
+    }
+
+    if production_plan:
+        # Get work orders from production plan
+        work_orders = frappe.get_all(
+            "Work Order",
+            filters={"production_plan": production_plan},
+            pluck="name"
+        )
+        if work_orders:
+            jc_filters["work_order"] = ["in", work_orders]
+
+    # Get affected job cards
+    affected_jc = frappe.get_all(
+        "Job Card",
+        filters=jc_filters,
+        fields=[
+            "name", "work_order", "operation", "production_item",
+            "for_quantity", "expected_start_date", "expected_end_date"
+        ]
+    )
+
+    # Calculate total impact
+    total_duration_mins = 0
+    for jc in affected_jc:
+        if jc.expected_start_date and jc.expected_end_date:
+            duration = (jc.expected_end_date - jc.expected_start_date).total_seconds() / 60
+            total_duration_mins += duration
+
+    # Find alternative workstations
+    alternatives = []
+    if ws_doc.workstation_type:
+        alternatives = frappe.get_all(
+            "Workstation",
+            filters={
+                "workstation_type": ws_doc.workstation_type,
+                "name": ["!=", workstation],
+                "status": "Production"
+            },
+            fields=["name", "workstation_name", "production_capacity"]
+        )
+
+    return {
+        "success": True,
+        "workstation": workstation,
+        "workstation_name": ws_doc.workstation_name,
+        "current_status": ws_doc.status,
+        "impact_analysis": {
+            "affected_job_cards": len(affected_jc),
+            "total_duration_minutes": round(total_duration_mins, 0),
+            "total_duration_hours": round(total_duration_mins / 60, 1),
+            "job_cards": affected_jc[:20],  # Limit to first 20 for preview
+        },
+        "alternative_workstations": alternatives,
+        "recommendation": _("Reschedule with workstation '{0}' excluded to minimize impact").format(workstation) if affected_jc else _("No active operations on this workstation")
+    }
