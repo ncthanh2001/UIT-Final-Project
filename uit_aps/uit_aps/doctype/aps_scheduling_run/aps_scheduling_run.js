@@ -32,20 +32,24 @@ frappe.ui.form.on("APS Scheduling Run", {
 
     llm_analysis_button(frm) {
         // Handle "Get AI Analysis" button click
-        if (frm.doc.run_status !== "Completed") {
+        if (frm.doc.run_status !== "Completed" && frm.doc.run_status !== "Pending Approval" && frm.doc.run_status !== "Applied") {
             frappe.msgprint({
                 title: __("Cannot Analyze"),
-                message: __("Please run scheduling first. Analysis is only available for completed scheduling runs."),
+                message: __("Please run scheduling first. Analysis is only available after scheduling is completed."),
                 indicator: "orange"
             });
             return;
         }
 
+        // Get custom prompt from field
+        let customPrompt = frm.doc.llm_analysis_prompt || "";
+
         frappe.call({
             method: "uit_aps.scheduling.llm.llm_api.get_scheduling_advice",
             args: {
                 scheduling_run: frm.doc.name,
-                language: frm.doc.llm_analysis_language || "vi"
+                language: frm.doc.llm_analysis_language || "vi",
+                custom_prompt: customPrompt
             },
             freeze: true,
             freeze_message: __("Getting AI analysis from OpenAI..."),

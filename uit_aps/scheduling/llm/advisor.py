@@ -86,7 +86,8 @@ class SchedulingAdvisor:
     def analyze_scheduling_run(
         self,
         scheduling_run: str,
-        language: str = "vi"
+        language: str = "vi",
+        custom_prompt: str = None
     ) -> Dict[str, Any]:
         """
         Analyze a scheduling run and provide recommendations.
@@ -94,6 +95,7 @@ class SchedulingAdvisor:
         Args:
             scheduling_run: APS Scheduling Run name
             language: Response language (vi=Vietnamese, en=English)
+            custom_prompt: Custom user prompt/question (optional)
 
         Returns:
             Dict with analysis results and recommendations
@@ -112,8 +114,11 @@ class SchedulingAdvisor:
                 "error": _("Failed to load scheduling data")
             }
 
-        # Build analysis prompt
-        prompt = self._build_analysis_prompt(data, language)
+        # Build analysis prompt - use custom prompt if provided
+        if custom_prompt and custom_prompt.strip():
+            prompt = self._build_custom_prompt(data, custom_prompt, language)
+        else:
+            prompt = self._build_analysis_prompt(data, language)
 
         # Get LLM response
         try:
@@ -270,6 +275,61 @@ Focus on:
 Respond in clear, concise English.
 Use bullet points and headings for readability.
 Include specific numbers and percentages in your analysis."""
+
+    def _build_custom_prompt(self, data: Dict, custom_prompt: str, language: str) -> str:
+        """
+        Build prompt with user's custom question and scheduling data context.
+
+        Args:
+            data: Scheduling data
+            custom_prompt: User's custom question/prompt
+            language: Response language
+
+        Returns:
+            Combined prompt string
+        """
+        # Build data context
+        context = f"""## Thông tin lập lịch sản xuất
+
+### Tổng quan
+- Scheduling Run: {data['scheduling_run']}
+- Production Plan: {data['production_plan']}
+- Ngày chạy: {data['run_date']}
+- Chiến lược: {data['strategy']}
+
+### Metrics
+- Tổng số operations: {data['total_operations']}
+- Operations trễ: {data['late_operations']}
+- Tỷ lệ đúng hạn: {data['on_time_rate']}%
+- Makespan: {data['makespan_hours']} giờ ({data['makespan_minutes']} phút)
+
+### Tải trạm làm việc (Workstation Load)
+"""
+        for ws, load in data['workstation_load'].items():
+            late_pct = round(load['late_count'] / max(load['count'], 1) * 100, 1)
+            context += f"- {ws}: {load['count']} operations, {round(load['total_mins']/60, 1)} giờ, {late_pct}% trễ\n"
+
+        context += f"""
+### Chi tiết công việc (mẫu {min(len(data['job_details']), 10)} đầu tiên)
+"""
+        for jc in data['job_details'][:10]:
+            status = "TRỄ" if jc['is_late'] else "OK"
+            context += f"- [{status}] {jc['item']} | {jc['operation']} | {jc['workstation']}\n"
+
+        # Combine context with user's custom prompt
+        lang_instruction = "Trả lời bằng tiếng Việt." if language == "vi" else "Respond in English."
+
+        prompt = f"""{context}
+
+---
+
+## Yêu cầu từ người dùng:
+{custom_prompt}
+
+---
+{lang_instruction}
+"""
+        return prompt
 
     def _build_analysis_prompt(self, data: Dict, language: str) -> str:
         """Build the analysis prompt with scheduling data."""

@@ -58,6 +58,7 @@
   "column_break_metrics",
   "machine_utilization",
   "section_llm_analysis",
+  "llm_analysis_prompt",
   "llm_analysis_button",
   "llm_analysis_language",
   "column_break_llm",
@@ -412,6 +413,13 @@
    "fieldname": "section_llm_analysis",
    "fieldtype": "Section Break",
    "label": "LLM Analysis (AI Advisor)"
+  },
+  {
+   "default": "Hãy phân tích kết quả lập lịch sản xuất này và đưa ra:\n1. Đánh giá tổng quan về hiệu quả lập lịch\n2. Các điểm mạnh và điểm yếu của lịch trình\n3. Khuyến nghị cải thiện cụ thể\n4. Cảnh báo rủi ro tiềm ẩn (nếu có)\n5. Đề xuất hành động ưu tiên",
+   "description": "Nhập câu hỏi hoặc yêu cầu phân tích gửi đến AI. Bạn có thể tùy chỉnh prompt này theo nhu cầu.",
+   "fieldname": "llm_analysis_prompt",
+   "fieldtype": "Small Text",
+   "label": "AI Prompt (Câu hỏi cho AI)"
   },
   {
    "fieldname": "llm_analysis_button",

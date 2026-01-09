@@ -19,6 +19,7 @@ from typing import Dict, Any
 def get_scheduling_advice(
     scheduling_run: str,
     language: str = "vi",
+    custom_prompt: str = None,
     api_key: str = None
 ) -> Dict[str, Any]:
     """
@@ -27,6 +28,7 @@ def get_scheduling_advice(
     Args:
         scheduling_run: APS Scheduling Run name
         language: Response language (vi=Vietnamese, en=English)
+        custom_prompt: Custom user prompt/question to ask AI (optional)
         api_key: Optional OpenAI API key (uses settings if not provided)
 
     Returns:
@@ -58,7 +60,7 @@ def get_scheduling_advice(
 
         # Create advisor and get analysis
         advisor = SchedulingAdvisor(api_key=api_key)
-        result = advisor.analyze_scheduling_run(scheduling_run, language)
+        result = advisor.analyze_scheduling_run(scheduling_run, language, custom_prompt)
 
         return result
 
