@@ -2,7 +2,7 @@
     "name": "APS Demo Dashboard",
     "doctype": "Page",
     "module": "UIT APS",
-    "page_name": "aps-demo-dashboard",
+    "page_name": "aps_demo_dashboard",
     "standard": "Yes",
     "system_page": 0,
     "title": "APS Demo Dashboard",

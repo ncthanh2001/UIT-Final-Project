@@ -1,4 +1,6 @@
-frappe.pages['aps-demo-dashboard'].on_page_load = function(wrapper) {
+frappe.pages['aps_demo_dashboard'] = frappe.pages['aps_demo_dashboard'] || {};
+
+frappe.pages['aps_demo_dashboard'].on_page_load = function(wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
         title: 'APS Demo Dashboard',
@@ -18,7 +20,7 @@ frappe.pages['aps-demo-dashboard'].on_page_load = function(wrapper) {
     page.aps_dashboard = new APSDemoDashboard(page);
 };
 
-frappe.pages['aps-demo-dashboard'].refresh = function(wrapper) {
+frappe.pages['aps_demo_dashboard'].refresh = function(wrapper) {
     if (wrapper.page.aps_dashboard) {
         wrapper.page.aps_dashboard.refresh();
     }
@@ -792,7 +794,7 @@ class APSDemoDashboard {
     }
 
     view_gantt() {
-        frappe.set_route('aps-gantt-chart');
+        frappe.set_route('aps_gantt_chart');
     }
 
     compare_schedules() {
