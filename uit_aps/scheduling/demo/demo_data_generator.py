@@ -135,10 +135,25 @@ class DemoDataGenerator:
 
         # Get default company and warehouse
         company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+
+        # Get valid warehouse for the company
         default_warehouse = frappe.db.get_single_value("Stock Settings", "default_warehouse")
+        if not default_warehouse or not frappe.db.exists("Warehouse", default_warehouse):
+            # Try to get Stores warehouse for the company
+            default_warehouse = frappe.db.get_value(
+                "Warehouse",
+                {"warehouse_name": "Stores", "company": company, "is_group": 0},
+                "name"
+            )
         if not default_warehouse:
-            # Try to get any warehouse
-            default_warehouse = frappe.db.get_value("Warehouse", {"is_group": 0, "company": company}, "name")
+            # Try any non-group warehouse for the company
+            default_warehouse = frappe.db.get_value(
+                "Warehouse",
+                {"company": company, "is_group": 0},
+                "name"
+            )
+        if not default_warehouse:
+            frappe.throw(_("No valid warehouse found for company {0}").format(company))
 
         plans_config = [
             {
@@ -205,7 +220,7 @@ class DemoDataGenerator:
                     created_plans.append(pp.name)
 
             except Exception as e:
-                frappe.log_error(f"Error creating plan {plan_name}: {str(e)}", "Demo Data Generator")
+                frappe.log_error(frappe.get_traceback(), f"Demo: {plan_name}"[:140])
 
         self.created_production_plans = created_plans
         return created_plans
@@ -302,10 +317,10 @@ class DemoDataGenerator:
                         current_start = end_time + timedelta(minutes=10)  # 10 min gap
 
                     except Exception as e:
-                        frappe.log_error(f"Error creating Job Card for {wo.name} - {op.operation}: {str(e)}", "Demo Data Generator")
+                        frappe.log_error(frappe.get_traceback(), f"Demo JC: {wo.name}"[:140])
 
             except Exception as e:
-                frappe.log_error(f"Error creating Work Order for {item.item_code}: {str(e)}", "Demo Data Generator")
+                frappe.log_error(frappe.get_traceback(), f"Demo WO: {item.item_code}"[:140])
 
         self.created_work_orders.extend(work_orders)
         self.created_job_cards.extend(job_cards)
@@ -484,7 +499,7 @@ def cleanup_demo_data() -> Dict:
                 frappe.delete_doc("Work Order", wo, force=True, ignore_permissions=True)
                 deleted["work_orders"] += 1
             except Exception as e:
-                frappe.log_error(f"Error deleting WO {wo}: {str(e)}", "Cleanup Demo Data")
+                frappe.log_error(frappe.get_traceback(), f"Cleanup WO: {wo}"[:140])
 
         # Delete Production Plans
         production_plans = frappe.get_all(
@@ -501,7 +516,7 @@ def cleanup_demo_data() -> Dict:
                 frappe.delete_doc("Production Plan", pp, force=True, ignore_permissions=True)
                 deleted["production_plans"] += 1
             except Exception as e:
-                frappe.log_error(f"Error deleting PP {pp}: {str(e)}", "Cleanup Demo Data")
+                frappe.log_error(frappe.get_traceback(), f"Cleanup PP: {pp}"[:140])
 
         frappe.db.commit()
 
