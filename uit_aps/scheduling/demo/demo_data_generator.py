@@ -501,24 +501,146 @@ class DemoDataGenerator:
 @frappe.whitelist()
 def generate_demo_data() -> Dict:
     """API endpoint to generate demo data."""
-    generator = DemoDataGenerator()
-    return generator.generate_all()
+    try:
+        generator = DemoDataGenerator()
+        result = generator.generate_all()
+
+        if result.get("errors"):
+            return {
+                "success": False,
+                "error": ", ".join(result["errors"]),
+                **result
+            }
+
+        return {
+            "success": True,
+            "message": _("Demo data generated successfully"),
+            **result
+        }
+    except Exception as e:
+        frappe.log_error(str(e), "Generate Demo Data Error")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 
 @frappe.whitelist()
 def simulate_breakdown(workstation: str = "WS-LATHE-02") -> Dict:
     """API endpoint to simulate machine breakdown."""
-    generator = DemoDataGenerator()
-    return generator.simulate_machine_breakdown(workstation)
+    try:
+        generator = DemoDataGenerator()
+        result = generator.simulate_machine_breakdown(workstation)
+        return {
+            "success": True,
+            **result
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 
 @frappe.whitelist()
 def get_demo_status() -> Dict:
     """Get status of demo data."""
-    return {
-        "production_plans": frappe.db.count("Production Plan", {"name": ["like", "PP-DEMO-%"]}),
-        "work_orders": frappe.db.count("Work Order", {"production_plan": ["like", "PP-DEMO-%"]}),
-        "job_cards": frappe.db.count("Job Card", {"work_order": ["like", "WO-FG-%"]}),
-        "workstations": frappe.db.count("Workstation", {"name": ["like", "WS-%"]}),
-        "scheduling_runs": frappe.db.count("APS Scheduling Run", {"production_plan": ["like", "PP-DEMO-%"]})
-    }
+    try:
+        return {
+            "success": True,
+            "production_plans": frappe.db.count("Production Plan", {"name": ["like", "PP-DEMO-%"]}),
+            "work_orders": frappe.db.count("Work Order", {"production_plan": ["like", "PP-DEMO-%"]}),
+            "job_cards": frappe.db.count("Job Card"),
+            "workstations": frappe.db.count("Workstation"),
+            "items": frappe.db.count("Item"),
+            "scheduling_runs": frappe.db.count("APS Scheduling Run")
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+@frappe.whitelist()
+def cleanup_demo_data() -> Dict:
+    """
+    API endpoint to cleanup demo data.
+
+    Removes Production Plans, Work Orders, Job Cards created with DEMO prefix.
+    """
+    try:
+        deleted = {
+            "job_cards": 0,
+            "work_orders": 0,
+            "production_plans": 0,
+            "scheduling_runs": 0,
+            "scheduling_results": 0
+        }
+
+        # Delete Scheduling Results first
+        demo_runs = frappe.get_all(
+            "APS Scheduling Run",
+            filters={"production_plan": ["like", "PP-DEMO-%"]},
+            pluck="name"
+        )
+        for run in demo_runs:
+            # Delete results
+            results = frappe.get_all("APS Scheduling Result", filters={"scheduling_run": run}, pluck="name")
+            for r in results:
+                frappe.delete_doc("APS Scheduling Result", r, force=True)
+                deleted["scheduling_results"] += 1
+
+            frappe.delete_doc("APS Scheduling Run", run, force=True)
+            deleted["scheduling_runs"] += 1
+
+        # Delete Job Cards
+        job_cards = frappe.get_all(
+            "Job Card",
+            filters={"work_order": ["like", "WO-FG-%"]},
+            pluck="name"
+        )
+        for jc in job_cards:
+            frappe.delete_doc("Job Card", jc, force=True)
+            deleted["job_cards"] += 1
+
+        # Delete Work Orders
+        work_orders = frappe.get_all(
+            "Work Order",
+            filters={"production_plan": ["like", "PP-DEMO-%"]},
+            pluck="name"
+        )
+        for wo in work_orders:
+            # Cancel first if submitted
+            wo_doc = frappe.get_doc("Work Order", wo)
+            if wo_doc.docstatus == 1:
+                wo_doc.cancel()
+            frappe.delete_doc("Work Order", wo, force=True)
+            deleted["work_orders"] += 1
+
+        # Delete Production Plans
+        production_plans = frappe.get_all(
+            "Production Plan",
+            filters={"name": ["like", "PP-DEMO-%"]},
+            pluck="name"
+        )
+        for pp in production_plans:
+            pp_doc = frappe.get_doc("Production Plan", pp)
+            if pp_doc.docstatus == 1:
+                pp_doc.cancel()
+            frappe.delete_doc("Production Plan", pp, force=True)
+            deleted["production_plans"] += 1
+
+        frappe.db.commit()
+
+        return {
+            "success": True,
+            "message": _("Demo data cleaned up successfully"),
+            "deleted": deleted
+        }
+    except Exception as e:
+        frappe.log_error(str(e), "Cleanup Demo Data Error")
+        return {
+            "success": False,
+            "error": str(e)
+        }

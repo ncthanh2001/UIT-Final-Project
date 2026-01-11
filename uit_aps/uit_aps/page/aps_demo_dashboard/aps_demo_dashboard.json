@@ -1,0 +1,21 @@
+{
+    "name": "APS Demo Dashboard",
+    "doctype": "Page",
+    "module": "UIT APS",
+    "page_name": "aps-demo-dashboard",
+    "standard": "Yes",
+    "system_page": 0,
+    "title": "APS Demo Dashboard",
+    "icon": "fa fa-dashboard",
+    "roles": [
+        {
+            "role": "Manufacturing Manager"
+        },
+        {
+            "role": "Manufacturing User"
+        },
+        {
+            "role": "System Manager"
+        }
+    ]
+}
