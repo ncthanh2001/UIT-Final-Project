@@ -1,0 +1,375 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="29.2.10">
+  <diagram name="AI Analysis Activity Diagram" id="activity-ai-analysis">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title" value="&lt;b&gt;Activity Diagram: Phân Tích AI (GPT Analysis, GNN Bottleneck, RL Training)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="700" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== SWIMLANES ==================== -->
+
+        <!-- Swimlane: Manufacturing Manager -->
+        <mxCell id="swimlane_manager" value="&lt;b&gt;Manufacturing Manager&lt;/b&gt;" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="80" width="1300" height="170" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: UIT APS System -->
+        <mxCell id="swimlane_system" value="&lt;b&gt;UIT APS System&lt;/b&gt;" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="250" width="1300" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: AI Services -->
+        <mxCell id="swimlane_ai" value="&lt;b&gt;AI Services (GPT / GNN / RL)&lt;/b&gt;" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="450" width="1300" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== START NODE ==================== -->
+        <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="100" y="145" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTIVITIES - MANAGER ==================== -->
+
+        <!-- Activity: Select Scheduling Run -->
+        <mxCell id="act_select_run" value="Chọn&#xa;Scheduling Run&#xa;cần phân tích" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="170" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Decision: Analysis Type -->
+        <mxCell id="decision_type" value="Loại&#xa;phân tích?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="320" y="125" width="100" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Config GPT -->
+        <mxCell id="act_config_gpt" value="Cấu hình GPT:&#xa;- Custom prompt&#xa;- Language (vi/en)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="460" y="100" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Config RL -->
+        <mxCell id="act_config_rl" value="Cấu hình RL:&#xa;- Agent (PPO/SAC)&#xa;- Episodes (100-1000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="460" y="170" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: View GPT Result -->
+        <mxCell id="act_view_gpt" value="Xem kết quả&#xa;phân tích GPT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="950" y="100" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: View GNN Result -->
+        <mxCell id="act_view_gnn" value="Xem dự đoán&#xa;tắc nghẽn GNN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="100" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: View RL Result -->
+        <mxCell id="act_view_rl" value="Xem kết quả&#xa;training RL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="170" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Apply Recommendations -->
+        <mxCell id="act_apply_rec" value="Áp dụng&#xa;khuyến nghị" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="130" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTIVITIES - SYSTEM ==================== -->
+
+        <!-- Activity: Prepare Data GPT -->
+        <mxCell id="act_prepare_gpt" value="Chuẩn bị dữ liệu:&#xa;- KPIs (Makespan, Late Jobs)&#xa;- Workstation utilization&#xa;- Schedule details" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="620" y="270" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Prepare Data GNN -->
+        <mxCell id="act_prepare_gnn" value="Xây dựng Graph:&#xa;- Job nodes&#xa;- Machine nodes&#xa;- Edges (assignments)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="620" y="360" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Call GPT API -->
+        <mxCell id="act_call_gpt" value="Gọi OpenAI&#xa;GPT API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="810" y="290" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Call GNN -->
+        <mxCell id="act_call_gnn" value="Chạy GNN&#xa;Prediction" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="810" y="370" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Start RL Training -->
+        <mxCell id="act_start_rl" value="Khởi động&#xa;RL Training&#xa;(Background Job)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="460" y="290" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Save GPT Result -->
+        <mxCell id="act_save_gpt" value="Lưu kết quả:&#xa;llm_analysis_content&#xa;llm_analysis_date" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="940" y="280" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Save GNN Result -->
+        <mxCell id="act_save_gnn" value="Lưu dự đoán&#xa;bottleneck" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="940" y="370" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Save RL Log -->
+        <mxCell id="act_save_rl" value="Lưu&#xa;APS RL Training Log&#xa;+ Model checkpoint" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="290" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTIVITIES - AI SERVICES ==================== -->
+
+        <!-- Activity: GPT Process -->
+        <mxCell id="act_gpt_process" value="&lt;b&gt;OpenAI GPT&lt;/b&gt;&#xa;- Phân tích scheduling results&#xa;- Đánh giá hiệu quả&#xa;- Đề xuất cải thiện&#xa;- Cảnh báo rủi ro" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="620" y="490" width="170" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: GNN Process -->
+        <mxCell id="act_gnn_process" value="&lt;b&gt;Graph Neural Network&lt;/b&gt;&#xa;- Phân tích cấu trúc graph&#xa;- Dự đoán bottleneck&#xa;- Xác suất tắc nghẽn (%)&#xa;- Workstations at risk" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="820" y="490" width="170" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: RL Process -->
+        <mxCell id="act_rl_process" value="&lt;b&gt;RL Agent (PPO/SAC)&lt;/b&gt;&#xa;- Training episodes&#xa;- Policy optimization&#xa;- Reward: minimize makespan&#xa;- Penalty: late jobs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="490" width="170" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== END NODE ==================== -->
+        <mxCell id="end" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1255" y="575" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="end_ring" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="1250" y="570" width="40" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ARROWS ==================== -->
+
+        <!-- Start -> Select Run -->
+        <mxCell id="arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="start" target="act_select_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Select Run -> Decision Type -->
+        <mxCell id="arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_select_run" target="decision_type">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Decision Type -> Config GPT (GPT Analysis) -->
+        <mxCell id="arrow3" value="GPT" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="decision_type" target="act_config_gpt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Decision Type -> Prepare GNN (GNN) -->
+        <mxCell id="arrow4" value="GNN" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="decision_type" target="act_prepare_gnn">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="230" />
+              <mxPoint x="700" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Decision Type -> Config RL (RL Training) -->
+        <mxCell id="arrow5" value="RL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="decision_type" target="act_config_rl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Config GPT -> Prepare GPT -->
+        <mxCell id="arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_config_gpt" target="act_prepare_gpt">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="600" y="130" />
+              <mxPoint x="600" y="230" />
+              <mxPoint x="700" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Config RL -> Start RL -->
+        <mxCell id="arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_config_rl" target="act_start_rl">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="525" y="240" />
+              <mxPoint x="520" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Prepare GPT -> Call GPT -->
+        <mxCell id="arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_prepare_gpt" target="act_call_gpt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Prepare GNN -> Call GNN -->
+        <mxCell id="arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_prepare_gnn" target="act_call_gnn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Call GPT -> GPT Process (AI) -->
+        <mxCell id="arrow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_call_gpt" target="act_gpt_process">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="430" />
+              <mxPoint x="705" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Call GNN -> GNN Process (AI) -->
+        <mxCell id="arrow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_call_gnn" target="act_gnn_process">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="430" />
+              <mxPoint x="905" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Start RL -> RL Process (AI) -->
+        <mxCell id="arrow12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_start_rl" target="act_rl_process">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="430" />
+              <mxPoint x="1105" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- GPT Process -> Save GPT -->
+        <mxCell id="arrow13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_gpt_process" target="act_save_gpt">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="705" y="610" />
+              <mxPoint x="920" y="610" />
+              <mxPoint x="920" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- GNN Process -> Save GNN -->
+        <mxCell id="arrow14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_gnn_process" target="act_save_gnn">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="905" y="610" />
+              <mxPoint x="995" y="610" />
+              <mxPoint x="995" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- RL Process -> Save RL -->
+        <mxCell id="arrow15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_rl_process" target="act_save_rl">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1105" y="610" />
+              <mxPoint x="1060" y="610" />
+              <mxPoint x="1060" y="380" />
+              <mxPoint x="1145" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Save GPT -> View GPT -->
+        <mxCell id="arrow16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_save_gpt" target="act_view_gpt">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1005" y="230" />
+              <mxPoint x="1005" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Save GNN -> View GNN -->
+        <mxCell id="arrow17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_save_gnn" target="act_view_gnn">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1145" y="395" />
+              <mxPoint x="1145" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Save RL -> View RL -->
+        <mxCell id="arrow18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_save_rl" target="act_view_rl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- View GPT -> Apply Rec -->
+        <mxCell id="arrow19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_view_gpt" target="act_apply_rec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- View GNN -> Apply Rec -->
+        <mxCell id="arrow20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_view_gnn" target="act_apply_rec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- View RL -> Apply Rec -->
+        <mxCell id="arrow21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_view_rl" target="act_apply_rec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Apply Rec -> End -->
+        <mxCell id="arrow22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_apply_rec" target="end">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1270" y="230" />
+              <mxPoint x="1270" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== LEGEND ==================== -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="50" y="680" width="350" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;CHÚ THÍCH&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="685" width="350" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_manager" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="70" y="715" width="30" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_manager_text" value="Manufacturing Manager" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="710" width="150" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_system" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="70" y="745" width="30" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_system_text" value="UIT APS System" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="740" width="150" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_ai" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="70" y="775" width="30" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_ai_text" value="AI Services (GPT/GNN/RL)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="770" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NOTES ==================== -->
+        <mxCell id="note_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffc0;strokeColor=#999900;" vertex="1" parent="1">
+          <mxGeometry x="430" y="680" width="550" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="note_title" value="&lt;b&gt;GHI CHÚ - CÁC LOẠI PHÂN TÍCH AI&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="430" y="685" width="550" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="note_content" value="&lt;b&gt;GPT Analysis:&lt;/b&gt; Phân tích kết quả scheduling, đưa khuyến nghị bằng ngôn ngữ tự nhiên (vi/en)&#xa;&lt;b&gt;GNN (Graph Neural Network):&lt;/b&gt; Dự đoán bottleneck workstations dựa trên cấu trúc đồ thị&#xa;&lt;b&gt;RL (Reinforcement Learning):&lt;/b&gt; PPO/SAC agents học tối ưu chiến lược scheduling&#xa;- PPO: Proximal Policy Optimization - ổn định, dễ điều chỉnh&#xa;- SAC: Soft Actor-Critic - sample efficient, tối đa entropy" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="440" y="710" width="530" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== AI SERVICES BOX ==================== -->
+        <mxCell id="ai_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="680" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_box_title" value="&lt;b&gt;AI SERVICES CONFIGURATION&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="685" width="280" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ai_box_content" value="&lt;b&gt;OpenAI GPT:&lt;/b&gt; API Key trong APS Settings&#xa;&lt;b&gt;GNN Model:&lt;/b&gt; Pre-trained / Custom trained&#xa;&lt;b&gt;RL Agents:&lt;/b&gt;&#xa;  - Episodes: 100, 500, 1000&#xa;  - Checkpoint saved after training&#xa;  - Background job (async)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="710" width="260" height="90" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

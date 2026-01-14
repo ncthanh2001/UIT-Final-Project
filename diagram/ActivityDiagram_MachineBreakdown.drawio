@@ -1,0 +1,389 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="29.2.10">
+  <diagram name="Machine Breakdown Activity Diagram" id="activity-machine-breakdown">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title" value="&lt;b&gt;Activity Diagram: Xử Lý Sự Cố Máy (Machine Breakdown Handling)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="350" y="20" width="700" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== SWIMLANES ==================== -->
+
+        <!-- Swimlane: Manufacturing Manager -->
+        <mxCell id="swimlane_manager" value="&lt;b&gt;Manufacturing Manager&lt;/b&gt;" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="80" width="1300" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: UIT APS System -->
+        <mxCell id="swimlane_system" value="&lt;b&gt;UIT APS System&lt;/b&gt;" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="260" width="1300" height="280" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: OR-Tools Solver -->
+        <mxCell id="swimlane_ortools" value="&lt;b&gt;OR-Tools Solver&lt;/b&gt;" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="540" width="1300" height="150" as="geometry" />
+        </mxCell>
+
+        <!-- Swimlane: ERPNext -->
+        <mxCell id="swimlane_erpnext" value="&lt;b&gt;ERPNext&lt;/b&gt;" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="50" y="690" width="1300" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== START NODE ==================== -->
+        <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="100" y="150" width="30" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTIVITIES - MANAGER ==================== -->
+
+        <!-- Activity: Detect Breakdown -->
+        <mxCell id="act_detect" value="Phát hiện&#xa;sự cố máy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="170" y="140" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Select Broken Machine -->
+        <mxCell id="act_select_machine" value="Chọn máy&#xa;bị hỏng" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="300" y="140" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Decision: Simulate or Reschedule -->
+        <mxCell id="decision_action" value="Hành&#xa;động?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="430" y="130" width="90" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: View Simulation -->
+        <mxCell id="act_view_sim" value="Xem kết quả&#xa;mô phỏng" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="700" y="100" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Review New Schedule -->
+        <mxCell id="act_review_new" value="Xem lịch&#xa;mới" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="140" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Decision: Approve New Schedule -->
+        <mxCell id="decision_approve" value="Chấp&#xa;nhận?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1130" y="125" width="80" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Apply New Schedule -->
+        <mxCell id="act_apply_new" value="Áp dụng&#xa;lịch mới" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="140" width="90" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTIVITIES - SYSTEM ==================== -->
+
+        <!-- Activity: Simulate Impact -->
+        <mxCell id="act_simulate" value="Mô phỏng&#xa;tác động&#xa;(simulate_breakdown)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="550" y="290" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Get Affected Jobs -->
+        <mxCell id="act_get_affected" value="Lấy danh sách&#xa;Job Cards&#xa;bị ảnh hưởng" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="550" y="370" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Calculate Impact -->
+        <mxCell id="act_calc_impact" value="Tính toán:&#xa;- Số jobs affected&#xa;- Total time impact&#xa;- Available alternatives" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="710" y="290" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Mark Maintenance -->
+        <mxCell id="act_mark_maintenance" value="Đánh dấu máy&#xa;status: Maintenance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="170" y="380" width="130" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Exclude Machine -->
+        <mxCell id="act_exclude" value="Loại trừ máy hỏng&#xa;khỏi danh sách&#xa;available machines" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="170" y="300" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Reschedule -->
+        <mxCell id="act_reschedule" value="Chạy lại&#xa;Scheduling&#xa;(reschedule_on_breakdown)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="340" y="300" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Compare Results -->
+        <mxCell id="act_compare" value="So sánh kết quả:&#xa;- Old vs New Makespan&#xa;- Late Jobs change&#xa;- Improvement %" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="880" y="290" width="150" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Create New Run -->
+        <mxCell id="act_create_new_run" value="Tạo APS&#xa;Scheduling Run&#xa;mới" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="340" y="390" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Update ERPNext -->
+        <mxCell id="act_update_erp" value="Cập nhật&#xa;Job Cards&#xa;trong ERPNext" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="390" width="120" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Generate Report -->
+        <mxCell id="act_report" value="Tạo báo cáo&#xa;so sánh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="300" width="110" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTIVITIES - OR-TOOLS ==================== -->
+
+        <!-- Activity: Re-solve -->
+        <mxCell id="act_resolve" value="Giải lại bài toán&#xa;với constraints mới&#xa;(không có máy hỏng)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="340" y="580" width="170" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Optimize -->
+        <mxCell id="act_optimize" value="Tối ưu hóa&#xa;phân bổ jobs&#xa;sang máy thay thế" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="550" y="580" width="150" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Return New Solution -->
+        <mxCell id="act_return_new" value="Trả về&#xa;lịch mới" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="730" y="590" width="100" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTIVITIES - ERPNEXT ==================== -->
+
+        <!-- Activity: Update Workstation -->
+        <mxCell id="act_update_ws" value="Cập nhật status&#xa;Workstation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="170" y="720" width="130" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Activity: Save New Schedule -->
+        <mxCell id="act_save_new" value="Lưu Job Cards&#xa;với thời gian mới" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="720" width="140" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== END NODE ==================== -->
+        <mxCell id="end" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="730" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="end_ring" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1">
+          <mxGeometry x="1265" y="725" width="40" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ARROWS ==================== -->
+
+        <!-- Start -> Detect -->
+        <mxCell id="arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="start" target="act_detect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Detect -> Select Machine -->
+        <mxCell id="arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_detect" target="act_select_machine">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Select Machine -> Decision Action -->
+        <mxCell id="arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_select_machine" target="decision_action">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Decision Action -> Simulate (Mô phỏng) -->
+        <mxCell id="arrow4" value="Mô phỏng" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="decision_action" target="act_simulate">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="475" y="240" />
+              <mxPoint x="620" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Decision Action -> Reschedule (Lập lịch lại) -->
+        <mxCell id="arrow5" value="Lập lịch lại" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="decision_action" target="act_exclude">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="475" y="240" />
+              <mxPoint x="240" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Simulate -> Get Affected -->
+        <mxCell id="arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_simulate" target="act_get_affected">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Get Affected -> Calc Impact -->
+        <mxCell id="arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_get_affected" target="act_calc_impact">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="400" />
+              <mxPoint x="700" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Calc Impact -> View Sim -->
+        <mxCell id="arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_calc_impact" target="act_view_sim">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="785" y="240" />
+              <mxPoint x="755" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- View Sim -> Decision Action (back) -->
+        <mxCell id="arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;dashed=1;" edge="1" parent="1" source="act_view_sim" target="decision_action">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="755" y="90" />
+              <mxPoint x="475" y="90" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Exclude -> Mark Maintenance -->
+        <mxCell id="arrow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_exclude" target="act_mark_maintenance">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Mark Maintenance -> Update WS (ERPNext) -->
+        <mxCell id="arrow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_mark_maintenance" target="act_update_ws">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Exclude -> Reschedule -->
+        <mxCell id="arrow12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_exclude" target="act_reschedule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Reschedule -> Create New Run -->
+        <mxCell id="arrow13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_reschedule" target="act_create_new_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Reschedule -> Re-solve (OR-Tools) -->
+        <mxCell id="arrow14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#9673a6;" edge="1" parent="1" source="act_reschedule" target="act_resolve">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Re-solve -> Optimize -->
+        <mxCell id="arrow15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_resolve" target="act_optimize">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Optimize -> Return New -->
+        <mxCell id="arrow16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_optimize" target="act_return_new">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Return New -> Compare -->
+        <mxCell id="arrow17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#9673a6;" edge="1" parent="1" source="act_return_new" target="act_compare">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="850" y="615" />
+              <mxPoint x="850" y="500" />
+              <mxPoint x="955" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Compare -> Report -->
+        <mxCell id="arrow18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_compare" target="act_report">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Report -> Review New -->
+        <mxCell id="arrow19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_report" target="act_review_new">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1105" y="240" />
+              <mxPoint x="1050" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Review New -> Decision Approve -->
+        <mxCell id="arrow20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_review_new" target="decision_approve">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Decision Approve -> Select Machine (No - back) -->
+        <mxCell id="arrow21" value="Không" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;dashed=1;" edge="1" parent="1" source="decision_approve" target="act_select_machine">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1170" y="100" />
+              <mxPoint x="350" y="100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Decision Approve -> Apply New (Yes) -->
+        <mxCell id="arrow22" value="Có" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="decision_approve" target="act_apply_new">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Apply New -> Update ERP -->
+        <mxCell id="arrow23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_apply_new" target="act_update_erp">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1285" y="240" />
+              <mxPoint x="1110" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Update ERP -> Save New (ERPNext) -->
+        <mxCell id="arrow24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;strokeColor=#d6b656;" edge="1" parent="1" source="act_update_erp" target="act_save_new">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Save New -> End -->
+        <mxCell id="arrow25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;" edge="1" parent="1" source="act_save_new" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== FORK/JOIN FOR PARALLEL ==================== -->
+
+        <!-- Fork Bar -->
+        <mxCell id="fork_bar" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="530" y="240" width="5" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== LEGEND ==================== -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="50" y="830" width="350" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;CHÚ THÍCH&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="50" y="835" width="350" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_error" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="70" y="865" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_error_text" value="Sự kiện sự cố (Breakdown Event)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="860" width="200" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_manager" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="70" y="895" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_manager_text" value="Hoạt động của Manager" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="890" width="200" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_system" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="70" y="925" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_system_text" value="Hoạt động của UIT APS System" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="110" y="920" width="200" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NOTES ==================== -->
+        <mxCell id="note_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffc0;strokeColor=#999900;" vertex="1" parent="1">
+          <mxGeometry x="430" y="830" width="500" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="note_title" value="&lt;b&gt;GHI CHÚ - LUỒNG XỬ LÝ SỰ CỐ&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="430" y="835" width="500" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="note_content" value="• Mô phỏng (Simulate): Xem trước tác động mà không thay đổi dữ liệu&#xa;• Lập lịch lại (Reschedule): Tạo lịch mới loại trừ máy hỏng&#xa;• Jobs bị ảnh hưởng: Các Job Cards đang pending/in queue trên máy hỏng&#xa;• So sánh: Old Makespan vs New Makespan, số Late Jobs thay đổi&#xa;• Excluded Jobs: Các jobs đang chạy (WIP) không bị reschedule" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="440" y="860" width="480" height="90" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

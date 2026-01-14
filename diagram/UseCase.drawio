@@ -1,0 +1,788 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="29.2.10">
+  <diagram name="UIT APS Use Case Diagram" id="usecase-uit-aps">
+    <mxGraphModel dx="2500" dy="1800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title" value="&lt;b&gt;UIT APS (Advanced Planning &amp; Scheduling) - Use Case Diagram&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="600" y="20" width="800" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== SYSTEM BOUNDARY ==================== -->
+        <mxCell id="system_boundary" value="&lt;b&gt;UIT APS System&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;verticalAlign=top;align=center;fontSize=16;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="80" width="1500" height="1480" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTORS (LEFT SIDE) ==================== -->
+
+        <!-- Production Planner -->
+        <mxCell id="actor_planner" value="Production&#xa;Planner" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="200" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Manufacturing Manager -->
+        <mxCell id="actor_manager" value="Manufacturing&#xa;Manager" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="80" y="550" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Manufacturing User -->
+        <mxCell id="actor_user" value="Manufacturing&#xa;User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="80" y="900" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- System Manager -->
+        <mxCell id="actor_sysadmin" value="System&#xa;Manager" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1200" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTORS (RIGHT SIDE - External Systems) ==================== -->
+
+        <!-- ERPNext -->
+        <mxCell id="actor_erpnext" value="ERPNext/&#xa;Frappe" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="200" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- OR-Tools -->
+        <mxCell id="actor_ortools" value="OR-Tools&#xa;(Google)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="450" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- OpenAI GPT -->
+        <mxCell id="actor_openai" value="OpenAI&#xa;GPT" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="700" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- GNN -->
+        <mxCell id="actor_gnn" value="GNN&#xa;(Neural Network)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="950" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- RL Agent -->
+        <mxCell id="actor_rl" value="RL Agent&#xa;(PPO/SAC)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="2000" y="1200" width="60" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: FORECAST (Blue) ==================== -->
+
+        <mxCell id="module_forecast" value="&lt;b&gt;FORECAST MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#dae8fc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="100" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC1: Run Demand Forecast -->
+        <mxCell id="uc_forecast_run" value="Chạy Dự Báo&#xa;Nhu Cầu&#xa;(Run Forecast)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="400" y="140" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC2: Analyze Forecast with AI -->
+        <mxCell id="uc_forecast_ai" value="Phân Tích Dự Báo&#xa;bằng AI&#xa;(AI Analysis)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="400" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: View Forecast History -->
+        <mxCell id="uc_forecast_history" value="Xem Lịch Sử&#xa;Dự Báo&#xa;(View History)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="400" y="340" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: PLANNING (Green) ==================== -->
+
+        <mxCell id="module_planning" value="&lt;b&gt;PLANNING MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#d5e8d4;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="600" y="100" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC3: Create Production Plan -->
+        <mxCell id="uc_plan_create" value="Tạo Kế Hoạch&#xa;Sản Xuất&#xa;(Create Plan)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="600" y="140" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC4: Run MRP -->
+        <mxCell id="uc_plan_mrp" value="Chạy MRP&#xa;(Material Requirement&#xa;Planning)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="600" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC5: Create Purchase Order -->
+        <mxCell id="uc_plan_po" value="Tạo Purchase Order&#xa;từ MRP&#xa;(Create PO)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="600" y="340" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: View Production Plans -->
+        <mxCell id="uc_plan_view" value="Xem Danh Sách&#xa;Kế Hoạch&#xa;(View Plans)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="600" y="440" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: SCHEDULING (Orange) ==================== -->
+
+        <mxCell id="module_scheduling" value="&lt;b&gt;SCHEDULING MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#ffe6cc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="820" y="100" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC6: Run Scheduling Optimization -->
+        <mxCell id="uc_sched_run" value="Chạy Tối Ưu&#xa;Lập Lịch&#xa;(Run Scheduling)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="820" y="140" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC7: Compare with FIFO -->
+        <mxCell id="uc_sched_compare" value="So Sánh với&#xa;FIFO Baseline&#xa;(Compare)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="820" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC8: Apply Scheduling Results -->
+        <mxCell id="uc_sched_apply" value="Áp Dụng Kết Quả&#xa;Lập Lịch&#xa;(Apply Results)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="820" y="340" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC9: View Gantt Chart -->
+        <mxCell id="uc_sched_gantt" value="Xem Gantt Chart&#xa;Trực Quan&#xa;(View Gantt)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="820" y="440" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: View Scheduling History -->
+        <mxCell id="uc_sched_history" value="Xem Lịch Sử&#xa;Lập Lịch&#xa;(View History)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="820" y="540" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: View KPI Statistics -->
+        <mxCell id="uc_sched_kpi" value="Xem KPI&#xa;Thống Kê&#xa;(View Statistics)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="820" y="640" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: BREAKDOWN (Red) ==================== -->
+
+        <mxCell id="module_breakdown" value="&lt;b&gt;BREAKDOWN MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#f8cecc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="100" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC10: Simulate Machine Breakdown -->
+        <mxCell id="uc_break_simulate" value="Mô Phỏng&#xa;Sự Cố Máy&#xa;(Simulate)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="140" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC11: Reschedule on Breakdown -->
+        <mxCell id="uc_break_reschedule" value="Lập Lịch Lại&#xa;khi Máy Hỏng&#xa;(Reschedule)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC12: View Affected Jobs -->
+        <mxCell id="uc_break_affected" value="Xem Job Cards&#xa;Bị Ảnh Hưởng&#xa;(View Affected)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="340" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: Mark Machine Maintenance -->
+        <mxCell id="uc_break_maintenance" value="Đánh Dấu Máy&#xa;Bảo Trì&#xa;(Mark Maintenance)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="440" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: REPORTS (Purple) ==================== -->
+
+        <mxCell id="module_reports" value="&lt;b&gt;REPORTS MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#e1d5e7;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="100" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC13: Export Comparison Excel -->
+        <mxCell id="uc_report_excel" value="Xuất Báo Cáo&#xa;So Sánh Excel&#xa;(Export Excel)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="140" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC14: Export Gantt Excel -->
+        <mxCell id="uc_report_gantt" value="Xuất Dữ Liệu&#xa;Gantt Excel&#xa;(Export Gantt)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC15: Preview Report -->
+        <mxCell id="uc_report_preview" value="Xem Trước&#xa;Báo Cáo&#xa;(Preview Report)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="340" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC16: Print PDF -->
+        <mxCell id="uc_report_pdf" value="In Báo Cáo&#xa;PDF&#xa;(Print PDF)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="440" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: AI/ML (Yellow) ==================== -->
+
+        <mxCell id="module_ai" value="&lt;b&gt;AI/ML MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#fff2cc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="100" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC17: GPT Analysis -->
+        <mxCell id="uc_ai_gpt" value="Phân Tích&#xa;bằng GPT&#xa;(GPT Analysis)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="140" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC18: GNN Bottleneck Prediction -->
+        <mxCell id="uc_ai_gnn" value="Dự Đoán&#xa;Tắc Nghẽn&#xa;(GNN Prediction)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC19: RL Training -->
+        <mxCell id="uc_ai_rl" value="Huấn Luyện&#xa;RL Agent&#xa;(RL Training)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="340" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: View AI Recommendations -->
+        <mxCell id="uc_ai_recommend" value="Xem Khuyến Nghị&#xa;AI&#xa;(AI Recommendations)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="440" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: DEMO/CONFIG (Gray) ==================== -->
+
+        <mxCell id="module_demo" value="&lt;b&gt;DEMO &amp; CONFIG MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#f5f5f5;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="100" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC20: Generate Demo Data -->
+        <mxCell id="uc_demo_generate" value="Tạo Data Demo&#xa;(Generate Demo)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="140" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC21: View Demo Status -->
+        <mxCell id="uc_demo_status" value="Xem Trạng Thái&#xa;Demo&#xa;(View Status)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC22: Cleanup Demo Data -->
+        <mxCell id="uc_demo_cleanup" value="Xóa Demo Data&#xa;(Cleanup Demo)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="340" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: Configure APS Settings -->
+        <mxCell id="uc_config_settings" value="Cấu Hình&#xa;APS Settings&#xa;(Configure)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="440" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: Manage API Keys -->
+        <mxCell id="uc_config_apikey" value="Quản Lý&#xa;API Keys&#xa;(Manage Keys)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="540" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== MODULE: DASHBOARD ==================== -->
+
+        <mxCell id="module_dashboard" value="&lt;b&gt;DASHBOARD MODULE&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#b1ddf0;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="400" y="460" width="180" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- UC23: View APS Dashboard -->
+        <mxCell id="uc_dash_main" value="Xem Dashboard&#xa;APS&#xa;(View Dashboard)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="400" y="500" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC24: View Activity Log -->
+        <mxCell id="uc_dash_activity" value="Xem Nhật Ký&#xa;Hoạt Động&#xa;(Activity Log)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="400" y="600" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- UC: View Overview Statistics -->
+        <mxCell id="uc_dash_stats" value="Xem Thống Kê&#xa;Tổng Quan&#xa;(Overview Stats)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b1ddf0;strokeColor=#0e8088;" vertex="1" parent="1">
+          <mxGeometry x="400" y="700" width="140" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RELATIONSHIPS: Production Planner ==================== -->
+
+        <!-- Planner -> Forecast -->
+        <mxCell id="rel_planner_forecast1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_planner" target="uc_forecast_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_planner_forecast2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_planner" target="uc_forecast_ai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_planner_forecast3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_planner" target="uc_forecast_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Planner -> Planning -->
+        <mxCell id="rel_planner_plan1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_planner" target="uc_plan_create">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_planner_plan2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_planner" target="uc_plan_mrp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_planner_plan3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_planner" target="uc_plan_po">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_planner_plan4" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_planner" target="uc_plan_view">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RELATIONSHIPS: Manufacturing Manager ==================== -->
+
+        <!-- Manager -> Scheduling -->
+        <mxCell id="rel_manager_sched1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_sched_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_sched2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_sched_compare">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_sched3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.4;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_sched_apply">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_sched4" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_sched_gantt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_sched5" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_sched_history">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_sched6" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.6;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_sched_kpi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Manager -> Breakdown -->
+        <mxCell id="rel_manager_break1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_break_simulate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_break2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_break_reschedule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_break3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.6;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_break_affected">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_break4" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_break_maintenance">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Manager -> Reports -->
+        <mxCell id="rel_manager_report1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.6;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_report_excel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_report2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.6;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_report_gantt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_report3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_report_preview">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_report4" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_report_pdf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Manager -> AI -->
+        <mxCell id="rel_manager_ai1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_ai_gpt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_ai2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_ai_gnn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_ai3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_ai_rl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_ai4" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_ai_recommend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Manager -> Dashboard -->
+        <mxCell id="rel_manager_dash1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_dash_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_dash2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.4;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_dash_activity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_manager_dash3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_manager" target="uc_dash_stats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RELATIONSHIPS: Manufacturing User ==================== -->
+
+        <!-- User -> Gantt -->
+        <mxCell id="rel_user_gantt" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_user" target="uc_sched_gantt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- User -> Dashboard -->
+        <mxCell id="rel_user_dash1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_user" target="uc_dash_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_user_dash2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_user" target="uc_dash_stats">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- User -> View Plans -->
+        <mxCell id="rel_user_plans" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_user" target="uc_plan_view">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RELATIONSHIPS: System Manager ==================== -->
+
+        <!-- SysAdmin -> Demo -->
+        <mxCell id="rel_sys_demo1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_sysadmin" target="uc_demo_generate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_sys_demo2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.4;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_sysadmin" target="uc_demo_status">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_sys_demo3" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_sysadmin" target="uc_demo_cleanup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_sys_config1" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.6;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_sysadmin" target="uc_config_settings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_sys_config2" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="actor_sysadmin" target="uc_config_apikey">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RELATIONSHIPS: External Systems ==================== -->
+
+        <!-- ERPNext -> Multiple UCs -->
+        <mxCell id="rel_erp_plan" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_erpnext" target="uc_plan_create">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_erp_mrp" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_erpnext" target="uc_plan_mrp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_erp_po" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_erpnext" target="uc_plan_po">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_erp_apply" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_erpnext" target="uc_sched_apply">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- OR-Tools -> Scheduling -->
+        <mxCell id="rel_ortools_sched" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_ortools" target="uc_sched_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_ortools_resched" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_ortools" target="uc_break_reschedule">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- OpenAI -> AI -->
+        <mxCell id="rel_openai_gpt" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_openai" target="uc_ai_gpt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_openai_recommend" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.7;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_openai" target="uc_ai_recommend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_openai_forecast" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.3;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_openai" target="uc_forecast_ai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- GNN -> Bottleneck -->
+        <mxCell id="rel_gnn_bottleneck" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_gnn" target="uc_ai_gnn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- RL -> Training -->
+        <mxCell id="rel_rl_training" style="endArrow=none;html=1;rounded=0;dashed=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#9673a6;" edge="1" parent="1" source="actor_rl" target="uc_ai_rl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== INCLUDE RELATIONSHIPS ==================== -->
+
+        <!-- Run Scheduling includes Compare -->
+        <mxCell id="include_sched_compare" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#666666;" edge="1" parent="1" source="uc_sched_run" target="uc_sched_compare">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Apply includes Update ERPNext -->
+        <mxCell id="include_apply_update" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#666666;" edge="1" parent="1" source="uc_sched_compare" target="uc_sched_apply">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Reschedule includes Simulate -->
+        <mxCell id="include_resched_sim" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;strokeColor=#666666;" edge="1" parent="1" source="uc_break_reschedule" target="uc_break_simulate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Create Plan includes from Forecast -->
+        <mxCell id="include_plan_forecast" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#666666;" edge="1" parent="1" source="uc_plan_create" target="uc_forecast_run">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- MRP includes Create PO -->
+        <mxCell id="include_mrp_po" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#666666;" edge="1" parent="1" source="uc_plan_mrp" target="uc_plan_po">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== LEGEND ==================== -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1400" width="280" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;LEGEND&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1405" width="280" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_actor" value="" style="shape=umlActor;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="55" y="1430" width="20" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_actor_text" value="Actor (User/System)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="85" y="1435" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_uc" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="50" y="1470" width="30" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_uc_text" value="Use Case" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="85" y="1470" width="150" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_assoc" value="" style="endArrow=none;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="50" y="1510" as="sourcePoint" />
+            <mxPoint x="80" y="1510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend_assoc_text" value="Association (User ↔ UC)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="85" y="1500" width="170" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_include" value="" style="endArrow=open;endSize=8;dashed=1;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="50" y="1535" as="sourcePoint" />
+            <mxPoint x="80" y="1535" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend_include_text" value="&lt;&lt;include&gt;&gt; / &lt;&lt;extend&gt;&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="85" y="1525" width="170" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTOR COLORS LEGEND ==================== -->
+        <mxCell id="legend_colors" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1400" width="250" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_colors_title" value="&lt;b&gt;ACTOR COLORS&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1405" width="250" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_color1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="355" y="1435" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_color1_text" value="Production Planner" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1430" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_color2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="355" y="1460" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_color2_text" value="Manufacturing Manager" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1455" width="140" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_color3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="355" y="1485" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_color3_text" value="Manufacturing User" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1480" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_color4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="355" y="1510" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_color4_text" value="System Manager" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1505" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="legend_color5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="355" y="1535" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_color5_text" value="External Systems" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="380" y="1530" width="120" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ACTOR DESCRIPTION TABLE ==================== -->
+
+        <!-- Table Title -->
+        <mxCell id="actor_table_title" value="&lt;b&gt;BẢNG GIẢI THÍCH ACTORS&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#4a86e8;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=16;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1400" width="700" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Table Header -->
+        <mxCell id="table_header_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="430" width="700" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="table_header_stt" value="&lt;b&gt;STT&lt;/b&gt;" style="text;html=1;strokeColor=#333333;fillColor=none;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1435" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="table_header_actor" value="&lt;b&gt;Tên Actor&lt;/b&gt;" style="text;html=1;strokeColor=#333333;fillColor=none;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1435" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="table_header_type" value="&lt;b&gt;Loại&lt;/b&gt;" style="text;html=1;strokeColor=#333333;fillColor=none;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1435" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="table_header_desc" value="&lt;b&gt;Mô tả / Ý nghĩa&lt;/b&gt;" style="text;html=1;strokeColor=#333333;fillColor=none;align=center;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1435" width="470" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Row 1: Production Planner -->
+        <mxCell id="row1_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1465" width="700" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row1_stt" value="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1465" width="40" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row1_actor" value="&lt;b&gt;Production Planner&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1465" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row1_type" value="Người dùng" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1465" width="70" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row1_desc" value="Nhân viên lập kế hoạch sản xuất. Chịu trách nhiệm dự báo nhu cầu, tạo Production Plan, chạy MRP và tạo đơn đặt hàng nguyên vật liệu (Purchase Order)." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1465" width="470" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Row 2: Manufacturing Manager -->
+        <mxCell id="row2_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1510" width="700" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row2_stt" value="2" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1510" width="40" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row2_actor" value="&lt;b&gt;Manufacturing&lt;br&gt;Manager&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1510" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row2_type" value="Người dùng" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1510" width="70" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row2_desc" value="Quản lý sản xuất nhà máy. Chịu trách nhiệm chạy tối ưu lập lịch (scheduling), xử lý sự cố máy móc, xem Gantt chart, xuất báo cáo, và sử dụng các tính năng AI/ML để phân tích và cải thiện hiệu suất." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1510" width="470" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Row 3: Manufacturing User -->
+        <mxCell id="row3_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1565" width="700" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row3_stt" value="3" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1565" width="40" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row3_actor" value="&lt;b&gt;Manufacturing&lt;br&gt;User&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1565" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row3_type" value="Người dùng" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1565" width="70" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row3_desc" value="Nhân viên sản xuất thông thường. Có quyền xem Dashboard, Gantt chart và thống kê tổng quan để theo dõi tiến độ sản xuất. Không có quyền thay đổi lịch trình." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1565" width="470" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Row 4: System Manager -->
+        <mxCell id="row4_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1610" width="700" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row4_stt" value="4" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1610" width="40" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row4_actor" value="&lt;b&gt;System Manager&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1610" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row4_type" value="Người dùng" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1610" width="70" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row4_desc" value="Quản trị viên hệ thống. Chịu trách nhiệm cấu hình APS Settings, quản lý API Keys (OpenAI), tạo/xóa demo data để test hệ thống." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1610" width="470" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- External Systems Section Title -->
+        <mxCell id="external_title" value="&lt;b&gt;HỆ THỐNG BÊN NGOÀI (External Systems)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=#9673a6;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=12;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1665" width="700" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Row 5: ERPNext/Frappe -->
+        <mxCell id="row5_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1690" width="700" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row5_stt" value="5" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1690" width="40" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row5_actor" value="&lt;b&gt;ERPNext/Frappe&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1690" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row5_type" value="Hệ thống" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1690" width="70" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row5_desc" value="Hệ thống ERP nền tảng. Cung cấp dữ liệu Production Plan, Work Order, Job Card, Workstation, BOM. UIT APS đọc dữ liệu từ ERPNext và ghi kết quả lập lịch ngược lại ERPNext." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1690" width="470" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Row 6: OR-Tools -->
+        <mxCell id="row6_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1745" width="700" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row6_stt" value="6" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1745" width="40" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row6_actor" value="&lt;b&gt;OR-Tools&lt;br&gt;(Google)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1745" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row6_type" value="Thư viện" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1745" width="70" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row6_desc" value="Thư viện tối ưu hóa của Google. Sử dụng CP-SAT Solver (Constraint Programming) để giải bài toán Job Shop Scheduling với các ràng buộc phức tạp." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1745" width="470" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Row 7: OpenAI GPT -->
+        <mxCell id="row7_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1790" width="700" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row7_stt" value="7" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1790" width="40" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row7_actor" value="&lt;b&gt;OpenAI GPT&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1790" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row7_type" value="API Service" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1790" width="70" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row7_desc" value="Dịch vụ AI của OpenAI. Phân tích kết quả lập lịch, đưa ra khuyến nghị cải thiện, đánh giá hiệu suất và cảnh báo rủi ro bằng ngôn ngữ tự nhiên (Tiếng Việt/Anh)." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1790" width="470" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Row 8: GNN -->
+        <mxCell id="row8_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1835" width="700" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row8_stt" value="8" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1835" width="40" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row8_actor" value="&lt;b&gt;GNN&lt;br&gt;(Neural Network)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1835" width="120" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row8_type" value="ML Model" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1835" width="70" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="row8_desc" value="Graph Neural Network - Mạng nơ-ron đồ thị. Dự đoán các điểm tắc nghẽn (bottleneck) trong quy trình sản xuất dựa trên cấu trúc đồ thị của Job-Machine." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1835" width="470" height="45" as="geometry" />
+        </mxCell>
+
+        <!-- Row 9: RL Agent -->
+        <mxCell id="row9_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1880" width="700" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row9_stt" value="9" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1880" width="40" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row9_actor" value="&lt;b&gt;RL Agent&lt;br&gt;(PPO/SAC)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1880" width="120" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row9_type" value="ML Model" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="780" y="1880" width="70" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="row9_desc" value="Reinforcement Learning Agent - Tác tử học tăng cường. Sử dụng thuật toán PPO (Proximal Policy Optimization) hoặc SAC (Soft Actor-Critic) để học và cải thiện chiến lược lập lịch theo thời gian thực." style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="850" y="1880" width="470" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- Table Border Lines -->
+        <mxCell id="table_border" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1430" width="700" height="505" as="geometry" />
+        </mxCell>
+
+        <!-- Column Separator Lines -->
+        <mxCell id="col_sep1" value="" style="endArrow=none;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="660" y="1430" as="sourcePoint" />
+            <mxPoint x="660" y="1935" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="col_sep2" value="" style="endArrow=none;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="780" y="1430" as="sourcePoint" />
+            <mxPoint x="780" y="1935" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="col_sep3" value="" style="endArrow=none;html=1;rounded=0;strokeColor=#333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="850" y="1430" as="sourcePoint" />
+            <mxPoint x="850" y="1935" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
