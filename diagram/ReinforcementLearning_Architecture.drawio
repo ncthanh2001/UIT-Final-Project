@@ -1,0 +1,201 @@
+<mxfile host="app.diagrams.net" modified="2024-01-14T10:00:00.000Z" agent="Mozilla/5.0" version="22.1.0" etag="rl-architecture" type="device">
+  <diagram id="rl-scheduling" name="RL Architecture for Scheduling">
+    <mxGraphModel dx="900" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="Kiến trúc Reinforcement Learning cho Lập lịch Sản xuất" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;fontColor=#1a237e;" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="400" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Environment Box -->
+        <mxCell id="env-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="300" y="70" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="env-label" value="Environment&#xa;(Scheduling)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="330" y="80" width="140" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow from Environment down -->
+        <mxCell id="arrow-env-down" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#6c8ebf;dashed=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="130" as="sourcePoint" />
+            <mxPoint x="400" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- State Box -->
+        <mxCell id="state-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="240" y="170" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="state-label" value="State" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="260" y="180" width="60" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Reward Box -->
+        <mxCell id="reward-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="360" y="170" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="reward-label" value="Reward" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="380" y="180" width="60" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow from State to Agent -->
+        <mxCell id="arrow-state" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#82b366;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="290" y="210" as="sourcePoint" />
+            <mxPoint x="290" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow from Reward to Agent -->
+        <mxCell id="arrow-reward" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d6b656;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="410" y="210" as="sourcePoint" />
+            <mxPoint x="410" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Agent Box (outer) -->
+        <mxCell id="agent-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="260" width="300" height="180" as="geometry" />
+        </mxCell>
+
+        <!-- Agent Label -->
+        <mxCell id="agent-label" value="Agent (RL)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="300" y="270" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Policy Network Box -->
+        <mxCell id="policy-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="230" y="300" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="policy-label" value="Policy&#xa;Network" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="245" y="310" width="70" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Value Network Box -->
+        <mxCell id="value-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="370" y="300" width="100" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="value-label" value="Value&#xa;Network" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="385" y="310" width="70" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow from Networks to Action -->
+        <mxCell id="arrow-to-action1" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#9673a6;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="280" y="360" as="sourcePoint" />
+            <mxPoint x="280" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-to-action2" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#b85450;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="420" y="360" as="sourcePoint" />
+            <mxPoint x="420" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-merge" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="280" y="380" as="sourcePoint" />
+            <mxPoint x="420" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-down-action" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="350" y="380" as="sourcePoint" />
+            <mxPoint x="350" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Action Box -->
+        <mxCell id="action-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="300" y="400" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="action-label" value="Action" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="320" y="405" width="60" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Feedback Arrow from Action back to Environment -->
+        <mxCell id="arrow-feedback1" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#d79b00;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="350" y="430" as="sourcePoint" />
+            <mxPoint x="350" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-feedback2" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#d79b00;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="350" y="480" as="sourcePoint" />
+            <mxPoint x="550" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-feedback3" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#d79b00;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="550" y="480" as="sourcePoint" />
+            <mxPoint x="550" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow-feedback4" value="" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#d79b00;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="550" y="100" as="sourcePoint" />
+            <mxPoint x="500" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="580" y="160" width="180" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="Chú thích" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="630" y="165" width="80" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- Legend items -->
+        <mxCell id="leg1-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="590" y="190" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1-text" value="Environment: Môi trường&#xa;lập lịch sản xuất" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="615" y="185" width="140" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="leg2-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="590" y="220" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2-text" value="State: Trạng thái hiện tại&#xa;(máy, jobs, thời gian)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="615" y="215" width="140" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="leg3-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="590" y="250" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3-text" value="Reward: Phần thưởng&#xa;(-makespan, -tardiness)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="615" y="245" width="140" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="leg4-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="590" y="280" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4-text" value="Policy Network: Chọn&#xa;action tối ưu" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="615" y="275" width="140" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="leg5-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="590" y="310" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="leg5-text" value="Value Network: Ước lượng&#xa;giá trị trạng thái" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="615" y="305" width="140" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="leg6-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="590" y="340" width="20" height="15" as="geometry" />
+        </mxCell>
+        <mxCell id="leg6-text" value="Action: Quyết định gán&#xa;job cho máy" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="615" y="335" width="140" height="25" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
